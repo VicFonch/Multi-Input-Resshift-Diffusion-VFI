@@ -7,7 +7,7 @@ data_confg:
   flow_method: raft
 
 trainer_confg:
-  accumulate_grad_batches: 6
+  accumulate_grad_batches: 4
   gradient_clip_val: 1.0
   max_epochs: 500
   num_nodes: 1
