@@ -3,6 +3,7 @@ import yaml
 from argparse import ArgumentParser
 
 from lightning import Trainer
+from lightning.pytorch.loggers import TensorBoardLogger
 from model.train_pipline import TrainPipline
 
 from torch.utils.data import DataLoader
@@ -24,6 +25,7 @@ if __name__ == "__main__":
         config = yaml.safe_load(file)
 
     trainer = Trainer(
+        logger=TensorBoardLogger("tb_logs", name="Diffusion_Animation_Training"),
         **config['trainer_confg']
     )   
 
