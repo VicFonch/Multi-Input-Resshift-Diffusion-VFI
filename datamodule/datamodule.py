@@ -1,49 +1,103 @@
-from imports.common_imports import *
+import os
+from PIL import Image
+import random
+
+import torch
+from torch.utils.data import Dataset
+
+from torchvision.transforms import (
+    Compose,
+    ToTensor,
+    Normalize,
+    Resize,
+    RandomHorizontalFlip,
+    RandomRotation,
+    ColorJitter,
+)
 
 class TargetImageDataset(Dataset):
     def __init__(self, data_dir, 
+                 size = (256, 512),
                  mean = [0.5, 0.5, 0.5], 
                  sd = [0.5, 0.5, 0.5],
-                 **ignore_kwargs
+                 amount_augmentations = 1,
+                 horizontal_flip = 0.5,
+                 rotation = 15,
+                 brightness = 0.2,
+                 contrast = 0.2,
+                 saturation = 0.2,
+                 hue = 0.1,
         ):
+        assert amount_augmentations >= 1, 'amount_augmentations must be greater than or equal to 1'
+
         self.data_dir = data_dir
-
-        subfolders = [folder for folder in os.listdir(data_dir) if os.path.isdir(os.path.join(data_dir, folder))]
-
-        self.image_paths = []
-        for folder in subfolders:
-            image_folder_path = os.path.join(data_dir, folder)
-            image_paths = os.path.join(image_folder_path, f'frame{2}.jpg')
-            self.image_paths.append(image_paths)
-
-        self.transform_img = transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Resize((256, 256)),
-            #transforms.Normalize([0.8750041, 0.8435287, 0.8396906], [0.2153176, 0.2438267, 0.2413682])
-            transforms.Normalize(mean, sd)
-        ])
-
-    def __len__(self):
-        return len(self.image_paths)
-
-    def __getitem__(self, index):
-        image_path = self.image_paths[index]
-        image = Image.open(image_path)
-        images = self.transform_img(image)
-        return images
-
-class TwoImagesDataset(Dataset):
-    def __init__(self, data_dir, 
-                 mean = [0.5, 0.5, 0.5], 
-                 sd = [0.5, 0.5, 0.5],
-                 **ignore_kwargs
-        ):
-        self.data_dir = data_dir
+        self.amount_augmentations = amount_augmentations
 
         # Obtener la lista de carpetas en el directorio de datos
         subfolders = [folder for folder in os.listdir(data_dir) if os.path.isdir(os.path.join(data_dir, folder))]
 
-        # Crear una lista de rutas de acceso a las imágenes y flujos ópticos
+        # Crear una lista de rutas de acceso a las imágenes
+        self.image_paths = []
+        for folder in subfolders:
+            image_folder_path = os.path.join(data_dir, folder)
+            image_path = os.path.join(image_folder_path, f'frame2.jpg')
+            self.image_paths.append(image_path)
+
+        # Transformaciones básicas
+        self.transform_img = Compose([
+            ToTensor(),
+            Resize(size),
+            Normalize(mean, sd)
+        ])
+
+        # Transformaciones de data augmentation
+        self.augmentation_transform = Compose([
+            RandomHorizontalFlip(p=horizontal_flip),
+            RandomRotation(degrees=rotation),
+            ColorJitter(brightness=brightness, 
+                                    contrast=contrast, 
+                                    saturation=saturation, 
+                                    hue=hue),
+        ])
+
+    def __len__(self):
+        return len(self.image_paths) * self.amount_augmentations
+
+    def __getitem__(self, index):
+        original_index = index // self.amount_augmentations
+        is_augmented = index % self.amount_augmentations == 1
+
+        image_path = self.image_paths[original_index]
+        image = Image.open(image_path)
+
+        if is_augmented:
+            image = self.augmentation_transform(image)
+
+        image = self.transform_img(image)
+        return image
+
+class TwoImagesDataset(Dataset):
+    def __init__(self, data_dir, 
+                 size = (256, 256),
+                 mean = [0.5, 0.5, 0.5], 
+                 sd = [0.5, 0.5, 0.5],
+                 amount_augmentations = 1,
+                 horizontal_flip = 0.5,
+                 time_flip = True,
+                 rotation = 0.5,
+                 brightness = 0.1,
+                 contrast = 0.1,
+                 saturation = 0.1,
+                 hue = 0.1,
+        ):
+        assert amount_augmentations >= 1, 'amount_augmentations must be greater than or equal to 1'
+
+        self.data_dir = data_dir
+        self.time_flip = time_flip
+        self.amount_augmentations = amount_augmentations
+
+        subfolders = [folder for folder in os.listdir(data_dir) if os.path.isdir(os.path.join(data_dir, folder))]
+
         self.image_paths = []
         for folder in subfolders:
             image_folder_path = os.path.join(data_dir, folder)
@@ -51,68 +105,60 @@ class TwoImagesDataset(Dataset):
             self.image_paths.append(image_paths)
 
         self.transform_img = Compose([
-            transforms.ToTensor(),
-            transforms.Resize((256, 256)),
-            #transforms.Normalize([0.8750041, 0.8435287, 0.8396906], [0.2153176, 0.2438267, 0.2413682])
-            transforms.Normalize(mean, sd)
+            ToTensor(),
+            Resize(size),
+        ])
+
+        # Data augmentation transformations
+        self.augmentation_transform = Compose([
+            RandomHorizontalFlip(p=horizontal_flip),
+            RandomRotation(degrees=rotation),
+            ColorJitter(brightness=brightness, 
+                        contrast=contrast, 
+                        saturation=saturation, 
+                        hue=hue),
+            Normalize(mean, sd)
         ])
 
     def __len__(self):
-        return len(self.image_paths)
+        return len(self.image_paths) * self.amount_augmentations
 
     def __getitem__(self, index):
-        image_paths = self.image_paths[index]
+        original_index = index // self.amount_augmentations
+        is_augmented = index % self.amount_augmentations == 1
+
+        image_paths = self.image_paths[original_index]
         images = [Image.open(image_path) for image_path in image_paths]
         images = [self.transform_img(image) for image in images]
-        images = torch.stack(images)
+
+        if is_augmented:
+            if self.time_flip and torch.rand(1) > 0.5:
+                images = images[::-1] 
+            images = [self.augmentation_transform(image) for image in images]
+
         return images
-
-# class TripletImagesDataset(Dataset):
-#     def __init__(self, data_dir, 
-#                  mean = [0.5, 0.5, 0.5], 
-#                  sd = [0.5, 0.5, 0.5],
-#                  **ignore_kwargs
-#         ):
-#         self.data_dir = data_dir
-
-#         # Obtener la lista de carpetas en el directorio de datos
-#         subfolders = [folder for folder in os.listdir(data_dir) if os.path.isdir(os.path.join(data_dir, folder))]
-
-#         # Crear una lista de rutas de acceso a las imágenes y flujos ópticos
-#         self.image_paths = []
-#         for folder in subfolders:
-#             image_folder_path = os.path.join(data_dir, folder)
-#             image_paths = [os.path.join(image_folder_path, f'frame{i}.jpg') for i in range(1, 4)]
-#             self.image_paths.append(image_paths)
-
-#         self.transform_img = Compose([
-#             transforms.ToTensor(),
-#             transforms.Resize((256, 256)),
-#             #transforms.Normalize([0.8750041, 0.8435287, 0.8396906], [0.2153176, 0.2438267, 0.2413682])
-#             transforms.Normalize(mean, sd)
-#         ])
-
-#     def __len__(self):
-#         return len(self.image_paths)
-
-#     def __getitem__(self, index):
-#         image_paths = self.image_paths[index]
-#         images = [Image.open(image_path) for image_path in image_paths]
-#         images = [self.transform_img(image) for image in images]
-#         images = torch.stack(images)
-#         return images
 
 class TripletImagesDataset(Dataset):
     def __init__(self,
                  data_dir, 
-                 mean = [0.5, 0.5, 0.5], 
-                 sd = [0.5, 0.5, 0.5],
-                 **ignore_kwargs):
-        self.data_dir = data_dir
-        self.mean = mean
-        self.sd = sd
+                 size=(256, 256),
+                 mean=[0.5, 0.5, 0.5], 
+                 sd=[0.5, 0.5, 0.5],
+                 amount_augmentations=1,
+                 horizontal_flip=0.5,
+                 time_flip=0,
+                 rotation=0,  
+                 brightness=0.2,
+                 contrast=0.2,
+                 saturation=0.2,
+                 hue=0.1):
 
-        # Obtener la lista de carpetas en el directorio de datos
+        assert amount_augmentations >= 1, 'amount_augmentations must be at least 1'
+
+        self.data_dir = data_dir
+        self.time_flip = time_flip
+        self.amount_augmentations = amount_augmentations
+
         subfolders = [folder for folder in os.listdir(data_dir) if os.path.isdir(os.path.join(data_dir, folder))]
 
         self.image_paths = []
@@ -121,32 +167,57 @@ class TripletImagesDataset(Dataset):
             I0 = os.path.join(image_folder_path, 'frame1.jpg')
             It = os.path.join(image_folder_path, 'frame2.jpg')
             I1 = os.path.join(image_folder_path, 'frame3.jpg')
-            self.image_paths.append([I0, It, I1])
+            if os.path.exists(I0) and os.path.exists(It) and os.path.exists(I1):
+                self.image_paths.append([I0, It, I1])
 
-        self.transform_img = Compose([
-            transforms.ToTensor(),
-            #transforms.Resize((544, 960)),
-            #transforms.Resize((448, 896)),
-            #transforms.Resize((384, 768)),
-            transforms.Resize((256, 448)),
-            #transforms.Normalize([0.8750041, 0.8435287, 0.8396906], [0.2153176, 0.2438267, 0.2413682])
-            transforms.Normalize(self.mean, self.sd)
-        ])
+        # Transformaciones combinadas para evitar aplicar doble transformación
+        if amount_augmentations > 1:
+            self.transform = Compose([
+                RandomHorizontalFlip(p=horizontal_flip),
+                RandomRotation(degrees=rotation),
+                ColorJitter(brightness=brightness, 
+                            contrast=contrast, 
+                            saturation=saturation, 
+                            hue=hue),
+                Resize(size),
+                ToTensor(),
+                Normalize(mean, sd)
+            ])
+        else:
+            self.transform = Compose([
+                Resize(size),
+                ToTensor(),
+                Normalize(mean, sd)
+            ])
 
     def __len__(self):
-        return len(self.image_paths)
+        return len(self.image_paths) * self.amount_augmentations
 
     def __getitem__(self, index):
-        image_paths = self.image_paths[index]
-        images = [Image.open(image_path).convert('RGB') for image_path in image_paths]
-        images = [self.transform_img(image) for image in images]
+        original_index = index // self.amount_augmentations
+
+        try:
+            image_paths = self.image_paths[original_index]
+            images = [Image.open(image_path).convert('RGB') for image_path in image_paths]
+        except Exception as e:
+            print(f"Error loading images from {self.image_paths[original_index]}: {e}")
+            return None 
+        
+        if self.amount_augmentations > 1:
+            if torch.rand(1) < self.time_flip:
+                images = images[::-1]
+            seed = torch.randint(0, 10000, (1,)).item()
+            torch.manual_seed(seed) 
+            random.seed(seed)
+        images = [self.transform(image) for image in images]
+
         return images
+
 
 class TwoImagesWithFlowDataset(Dataset):
     def __init__(self, data_dir, 
                  mean = [0.5, 0.5, 0.5], 
                  sd = [0.5, 0.5, 0.5],
-                 **ignore_kwargs
         ):
         self.data_dir = data_dir
         subfolders = [folder for folder in os.listdir(data_dir) if os.path.isdir(os.path.join(data_dir, folder))]
@@ -164,9 +235,9 @@ class TwoImagesWithFlowDataset(Dataset):
             self.flow_paths.append(flow_path)
 
         self.transform_img = Compose([
-            transforms.ToTensor(),
-            transforms.Resize((256, 256)),
-            transforms.Normalize(mean, sd)
+            ToTensor(),
+            Resize((256, 256)),
+            Normalize(mean, sd)
         ])
         self.transform_flow = Resize((256, 256))
 
@@ -191,8 +262,7 @@ class TwoImagesWithFlowDataset(Dataset):
 class TripletImagesWithFlowsDataset(Dataset):
     def __init__(self, data_dir, 
                  mean = [0.5, 0.5, 0.5], 
-                 sd = [0.5, 0.5, 0.5],
-                 **ignore_kwargs
+                 sd = [0.5, 0.5, 0.5]
         ):
         self.data_dir = data_dir
         subfolders = [folder for folder in os.listdir(data_dir) if os.path.isdir(os.path.join(data_dir, folder))]
@@ -210,9 +280,9 @@ class TripletImagesWithFlowsDataset(Dataset):
             self.flow_paths.append(flow_paths)
 
         self.transform_img = Compose([
-            transforms.ToTensor(),
-            transforms.Resize((256, 256)),
-            transforms.Normalize(mean, sd)
+            ToTensor(),
+            Resize((256, 256)),
+            Normalize(mean, sd)
         ])
         self.transform_flow = Resize((256, 256))
 
@@ -233,6 +303,3 @@ class TripletImagesWithFlowsDataset(Dataset):
         flows = torch.stack(flows)
 
         return {'images': images, 'flows': flows}
-    
-
-
