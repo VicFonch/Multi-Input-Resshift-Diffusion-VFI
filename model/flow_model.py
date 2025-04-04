@@ -89,9 +89,9 @@ class PWCFineFlow(nn.Module):
 
 
 class RAFTFineFlow(nn.Module):
-    def __init__(self):
+    def __init__(self, pretrained_path = None):
         super().__init__()
-        self.raft = RAFT()
+        self.raft = RAFT(pretrained_path)
 
     def forward(self, img1, img2):
         forward = self.raft(img1, img2)
