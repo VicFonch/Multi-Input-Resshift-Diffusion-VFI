@@ -12,7 +12,7 @@ from modules.basic_layers import (
 from modules.feature_extactor import Extractor
 from modules.half_warper import HalfWarper
 from modules.cupy_module.nedt import NEDT
-from model.flow_model import (
+from modules.flow_model import (
     RAFTFineFlow,
     PWCFineFlow
 )
