@@ -3,13 +3,11 @@
 ##################################################
 
 
-# import numpy as np
-# import torch
-# import torch.nn as nn
-# import torch.nn.functional as F
-# from argparse import Namespace
-
-from imports.common_imports import *
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from argparse import Namespace
+import numpy as np
 
 from .update import BasicUpdateBlock, SmallUpdateBlock
 from .extractor import BasicEncoder, SmallEncoder
