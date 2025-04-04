@@ -1,0 +1,47 @@
+data_confg:
+  train_batch_size: 2
+  val_batch_size: 4
+  test_batch_size: 4
+  mean: [0.5, 0.5, 0.5]
+  sd: [0.5, 0.5, 0.5]
+  flow_method: raft
+
+trainer_confg:
+  accumulate_grad_batches: 6
+  gradient_clip_val: 1.0
+  max_epochs: 500
+  num_nodes: 1
+  devices: 2
+  accelerator: gpu
+  strategy: ddp_find_unused_parameters_true
+
+optim_confg:
+  optimizer_confg:
+    lr: 1.0e-4
+    betas: [0.9, 0.999]
+    eps: 1.0e-8
+  scheduler_confg: # ReduceLROnPlateau
+    mode: min
+    factor: 0.5
+    patience: 3
+    verbose: True
+
+model_confg:
+  diffusion_confg:
+    kappa: 1
+    timesteps: 10
+    p: 0.3
+    etas_end: 0.99
+    min_noise_level: 0.04
+  denoiser_confg:
+    in_channels: 3
+    channels: [128, 256, 384, 512]
+    temb_channels: 512
+    num_conv_blocks: 1
+    flow_model: raft
+    heads: 1
+    window_size: 8
+    window_attn: True
+    grid_attn: True
+    expansion_rate: 2
+    dropout: 0.0
