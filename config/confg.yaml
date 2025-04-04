@@ -2,9 +2,20 @@ data_confg:
   train_batch_size: 6
   val_batch_size: 6
   test_batch_size: 6
-  mean: [0.5, 0.5, 0.5]
-  sd: [0.5, 0.5, 0.5]
   flow_method: raft
+  data_domain: animation
+  datamodule_confg:
+    mean: [0.5, 0.5, 0.5]
+    sd: [0.5, 0.5, 0.5]
+    size: [256, 448]
+    amount_augmentations: 1
+    horizontal_flip: 0.5
+    time_flip: True
+    rotation: 0
+    brightness: 0.2
+    contrast: 0.2
+    saturation: 0.2
+    hue: 0.1
 
 trainer_confg:
   accumulate_grad_batches: 5
@@ -16,7 +27,7 @@ trainer_confg:
   strategy: ddp_find_unused_parameters_true
 
 optim_confg:
-  optimizer_confg:
+  optimizer_confg: # AdamW
     lr: 1.0e-4
     betas: [0.9, 0.999]
     eps: 1.0e-8
