@@ -37,7 +37,7 @@ class HalfWarper(nn.Module):
         )
     
     @staticmethod
-    def forward_warpping(img, flow, mode='softmax', metric=None, mask=False):
+    def forward_warpping(img, flow, mode='softmax', metric=None, mask=True):
         if len(img.shape)!=4: img = img[None,]
         if len(flow.shape)!=4: flow = flow[None,]
         if metric is not None and len(metric.shape)!=4: metric = metric[None,]
@@ -70,11 +70,13 @@ class HalfWarper(nn.Module):
         z0to1 = -0.1*(img0 - HalfWarper.backward_wrapping(img1, flow0to1)).norm(dim=1, keepdim=True)
         return z1to0, z0to1
     
-    def forward(self, I0, I1, flow1tot, flow0tot, z1to0, z0to1, k = 5, mask=True):
+    def forward(self, I0, I1, flow1tot, flow0tot, z1to0 = None, z0to1 = None, k = 5, mask=True):
+        if z1to0 is None or z0to1 is None:
+            z1to0, z0to1 = self.z_metric(I0, I1, flow1tot, flow0tot)
 
         # image warping
-        fw0to1 = HalfWarper.forward_warpping(I0, flow0tot, mode='softmax', metric=z0to1, mask=mask)
-        fw1to0 = HalfWarper.forward_warpping(I1, flow1tot, mode='softmax', metric=z1to0, mask=mask)
+        fw0to1 = HalfWarper.forward_warpping(I0, flow0tot, mode='softmax', metric=z0to1, mask=True)
+        fw1to0 = HalfWarper.forward_warpping(I1, flow1tot, mode='softmax', metric=z1to0, mask=True)
 
         wrapped_image0tot = fw0to1[:,:-1] 
         wrapped_image1tot = fw1to0[:,:-1]
@@ -84,7 +86,7 @@ class HalfWarper(nn.Module):
         base0 = mask0tot*wrapped_image0tot + (1 - mask0tot)*wrapped_image1tot
         base1 = mask1tot*wrapped_image1tot + (1 - mask1tot)*wrapped_image0tot
 
-        base0 = torch.cat([base0, mask0tot], dim=1)
-        base1 = torch.cat([base1, mask1tot], dim=1)
-
+        if mask:
+            base0 = torch.cat([base0, mask0tot], dim=1)
+            base1 = torch.cat([base1, mask1tot], dim=1)
         return base0, base1
