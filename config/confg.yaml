@@ -38,9 +38,10 @@ optim_confg:
     verbose: True
 
 model_confg:
+  pretrained_model_path: null
   diffusion_confg:
-    kappa: 1
-    timesteps: 10
+    kappa: 2.0
+    timesteps: 15
     p: 0.3
     etas_end: 0.99
     min_noise_level: 0.04
