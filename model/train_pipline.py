@@ -15,6 +15,7 @@ from torchmetrics.image import LearnedPerceptualImagePatchSimilarity as LPIPS
 
 from model.model import SofsplatResshift
 from model.diffusion import MultiInputResShiftSheduler
+from modules.half_warper import HalfWarper
 
 from utils.utils import denorm, save_triplet, make_grid_images
 from utils.ema import EMA
@@ -32,8 +33,11 @@ class TrainPipline(LightningModule):
 
         self.mean, self.sd = confg["data_confg"]["mean"], confg["data_confg"]["sd"]
 
-        self.denoiser = SofsplatResshift(**confg["model_confg"]["denoiser_confg"])
+        self.prior_warper = HalfWarper().requires_grad_(False)
         self.diffusion = MultiInputResShiftSheduler(**confg["model_confg"]["diffusion_confg"])
+        self.denoiser = SofsplatResshift(**confg["model_confg"]["denoiser_confg"])
+        if confg["model_confg"]["pretrained_model_path"] is not None:
+            self.denoiser.load_state_dict(torch.load(confg["model_confg"]["pretrained_model_path"]))
 
         self.ema = EMA(beta=0.995)
         self.ema_denoiser = copy.deepcopy(self.denoiser).eval().requires_grad_(False)
@@ -67,7 +71,9 @@ class TrainPipline(LightningModule):
                             size=(It.shape[0],), device=It.device,
                             dtype=torch.long)
 
-        x_t = self.diffusion.forward_process(It, [I0, I1], tau, t)
+        warp0to1, warp1to0 = self.prior_warper(I0, I1, flow1tot, flow0tot, mask=False)
+        x_t = self.diffusion.forward_process(It, [warp0to1, warp1to0], tau, t)
+        
         predicted_It = self.denoiser(x_t, [I0, I1], tau, t)
         return predicted_It
 
