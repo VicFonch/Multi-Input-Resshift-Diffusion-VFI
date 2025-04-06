@@ -120,7 +120,11 @@ class MultiInputResShift(nn.Module):
         if tau is None:
             tau: torch.Tensor = torch.full((x.shape[0], len(Y)), 0.5, device=x.device, dtype=x.dtype)
         elif isinstance(tau, float):
-            tau: torch.Tensor = torch.full((x.shape[0], len(Y)), tau, device=x.device, dtype=x.dtype)
+            assert tau >= 0 and tau <= 1, "tau must be between 0 and 1"
+            tau: torch.Tensor = torch.stack([
+                torch.full((x.shape[0], 1), tau, device=x.device, dtype=x.dtype),
+                torch.full((x.shape[0], 1), 1 - tau, device=x.device, dtype=x.dtype)
+            ], dim=1)
         if not torch.is_tensor(t):
             t: torch.Tensor = torch.tensor([t], device=x.device, dtype=torch.long)
         if x is None:
@@ -150,7 +154,11 @@ class MultiInputResShift(nn.Module):
         batch, device = y.shape[0], y.device
         
         if isinstance(tau, float):
-            tau = torch.stack([tau, 1 - tau], dim=1)
+            assert tau >= 0 and tau <= 1, "tau must be between 0 and 1"
+            tau: torch.Tensor = torch.stack([
+                torch.full((batch, 1), tau, device=x.device, dtype=x.dtype),
+                torch.full((batch, 1), 1 - tau, device=x.device, dtype=x.dtype)
+            ], dim=1)
 
         if flows is None:
            flow0to1, flow1to0 = self.flow_model(Y[0], Y[1])
@@ -188,6 +196,7 @@ class MultiInputResShift(nn.Module):
         pbar.close()
         return x
 
+    # Training Step Only
     def forward(
         self, 
         I0: torch.Tensor, 
