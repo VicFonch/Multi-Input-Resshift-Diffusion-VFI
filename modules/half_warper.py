@@ -12,7 +12,13 @@ class HalfWarper(nn.Module):
         super().__init__()
 
     @staticmethod
-    def backward_wrapping(img, flow, resample='bilinear', padding_mode='border', align_corners=False):
+    def backward_wrapping(
+            img: torch.Tensor, 
+            flow: torch.Tensor, 
+            resample: str = 'bilinear', 
+            padding_mode: str = 'border', 
+            align_corners: bool = False
+        ) -> torch.Tensor:
         if len(img.shape)!=4: img = img[None,]
         if len(flow.shape)!=4: flow = flow[None,]
         
@@ -37,7 +43,13 @@ class HalfWarper(nn.Module):
         )
     
     @staticmethod
-    def forward_warpping(img, flow, mode='softmax', metric=None, mask=True):
+    def forward_warpping(
+            img: torch.Tensor, 
+            flow: torch.Tensor, 
+            mode: str = 'softmax', 
+            metric: torch.Tensor | None = None, 
+            mask: bool = True
+        ) -> torch.Tensor:
         if len(img.shape)!=4: img = img[None,]
         if len(flow.shape)!=4: flow = flow[None,]
         if metric is not None and len(metric.shape)!=4: metric = metric[None,]
@@ -63,16 +75,40 @@ class HalfWarper(nn.Module):
         return FunctionSoftsplat(img, flow, metric, mode)
     
     @staticmethod
-    def z_metric(img0, img1, flow1to0, flow0to1):
+    def z_metric(
+            img0: torch.Tensor, 
+            img1: torch.Tensor, 
+            flow0to1: torch.Tensor, 
+            flow1to0: torch.Tensor
+        ) -> tuple[torch.Tensor, torch.Tensor]:
         img0 = rgb_to_lab(img0[:,:3])
         img1 = rgb_to_lab(img1[:,:3])
         z1to0 = -0.1*(img1 - HalfWarper.backward_wrapping(img0, flow1to0)).norm(dim=1, keepdim=True)
         z0to1 = -0.1*(img0 - HalfWarper.backward_wrapping(img1, flow0to1)).norm(dim=1, keepdim=True)
-        return z1to0, z0to1
+        return z0to1, z1to0
     
-    def forward(self, I0, I1, flow1tot, flow0tot, z1to0 = None, z0to1 = None, k = 5, mask=True):
+    def forward(
+            self, 
+            I0: torch.Tensor, 
+            I1: torch.Tensor, 
+            flow0to1: torch.Tensor, 
+            flow1to0: torch.Tensor, 
+            z0to1: torch.Tensor | None = None, 
+            z1to0: torch.Tensor | None = None, 
+            tau: float | None = None, 
+            morph_kernel_size: int = 5, 
+            mask: bool = True
+        ) -> tuple[torch.Tensor, torch.Tensor]:
+        
         if z1to0 is None or z0to1 is None:
-            z1to0, z0to1 = self.z_metric(I0, I1, flow1tot, flow0tot)
+            z0to1, z1to0 = self.z_metric(I0, I1, flow0to1, flow1to0)
+
+        if tau is not None:
+            flow0tot = tau*flow0to1
+            flow1tot = (1 - tau)*flow1to0
+        else:
+            flow0tot = flow0to1
+            flow1tot = flow1to0
 
         # image warping
         fw0to1 = HalfWarper.forward_warpping(I0, flow0tot, mode='softmax', metric=z0to1, mask=True)
@@ -80,8 +116,8 @@ class HalfWarper(nn.Module):
 
         wrapped_image0tot = fw0to1[:,:-1] 
         wrapped_image1tot = fw1to0[:,:-1]
-        mask0tot = morph_open(fw0to1[:,-1:], k=k)
-        mask1tot = morph_open(fw1to0[:,-1:], k=k)
+        mask0tot = morph_open(fw0to1[:,-1:], k=morph_kernel_size)
+        mask1tot = morph_open(fw1to0[:,-1:], k=morph_kernel_size)
 
         base0 = mask0tot*wrapped_image0tot + (1 - mask0tot)*wrapped_image1tot
         base1 = mask1tot*wrapped_image1tot + (1 - mask1tot)*wrapped_image0tot
