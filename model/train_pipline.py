@@ -13,9 +13,7 @@ from torchmetrics.image import PeakSignalNoiseRatio as PSNR
 from torchmetrics.image import StructuralSimilarityIndexMeasure as SSIM
 from torchmetrics.image import LearnedPerceptualImagePatchSimilarity as LPIPS
 
-from model.model import SofsplatResshift
-from model.diffusion import MultiInputResShiftSheduler
-from modules.half_warper import HalfWarper
+from model.model import MultiInputResShift
 
 from utils.utils import denorm, save_triplet, make_grid_images
 from utils.ema import EMA
@@ -23,9 +21,9 @@ from utils.inter_frame_idx import get_inter_frame_temp_index
 from utils.raft import raft_flow
 
 
-class TrainPipline(LightningModule):
+class TrainerDiffusion(LightningModule):
     def __init__(self, confg, test_dataloader):
-        super(TrainPipline, self).__init__()
+        super(TrainerDiffusion, self).__init__()
 
         self.test_dataloader = test_dataloader
 
@@ -33,14 +31,10 @@ class TrainPipline(LightningModule):
 
         self.mean, self.sd = confg["data_confg"]["mean"], confg["data_confg"]["sd"]
 
-        self.prior_warper = HalfWarper().requires_grad_(False)
-        self.diffusion = MultiInputResShiftSheduler(**confg["model_confg"]["diffusion_confg"])
-        self.denoiser = SofsplatResshift(**confg["model_confg"]["denoiser_confg"])
-        if confg["model_confg"]["pretrained_model_path"] is not None:
-            self.denoiser.load_state_dict(torch.load(confg["model_confg"]["pretrained_model_path"]))
+        self.model = MultiInputResShift(**confg["model_confg"])
 
         self.ema = EMA(beta=0.995)
-        self.ema_denoiser = copy.deepcopy(self.denoiser).eval().requires_grad_(False)
+        self.ema_model = copy.deepcopy(self.model).eval().requires_grad_(False)
 
         self.charbonnier_loss = lambda x, y: torch.mean(torch.sqrt((x - y)**2 + 1e-6))
         self.lpips_loss = LPIPS(net_type='vgg')
@@ -61,20 +55,25 @@ class TrainPipline(LightningModule):
         pix2pix_loss = self.charbonnier_loss(x, predicted_x)
         return percep_loss + pix2pix_loss
 
+    def sample_t(self, shape, max_t, device):
+        p = torch.linspace(1, max_t, steps=max_t, device=device) ** 2 
+        p = p / p.sum()  
+        t = torch.multinomial(p, num_samples=shape[0], replacement=True)
+        return t
+
     def forward(self, I0, It, I1):
         flow0tot = raft_flow(I0, It, 'animation')
         flow1tot = raft_flow(I1, It, 'animation')
         mid_idx = get_inter_frame_temp_index(I0, It, I1, flow0tot, flow1tot).to(It.dtype)
 
         tau = torch.stack([mid_idx, 1 - mid_idx], dim=1)
-        t = torch.randint(low=1, high=self.diffusion.timesteps, 
-                            size=(It.shape[0],), device=It.device,
-                            dtype=torch.long)
-
-        warp0to1, warp1to0 = self.prior_warper(I0, I1, flow1tot, flow0tot, mask=False)
-        x_t = self.diffusion.forward_process(It, [warp0to1, warp1to0], tau, t)
         
-        predicted_It = self.denoiser(x_t, [I0, I1], tau, t)
+        if self.current_epoch > 5:
+            t = torch.randint(low=1, high=self.model.timesteps, size=(It.shape[0],), device=It.device, dtype=torch.long)
+        else:
+            t = self.sample_t(shape=(It.shape[0],), max_t=self.model.timesteps, device=It.device)
+
+        predicted_It = self.model(I0, It, I1, tau=tau, t=t)
         return predicted_It
 
     def get_step_plt_images(self, It, predicted_It):
@@ -86,8 +85,8 @@ class TrainPipline(LightningModule):
         ax[1].axis("off")
         ax[1].set_title("Ground Truth")
         plt.tight_layout() 
-        img_path = "step_image.png"
-        fig.savefig(img_path, dpi=300, bbox_inches='tight') 
+        #img_path = "step_image.png"
+        #fig.savefig(img_path, dpi=300, bbox_inches='tight') 
         plt.close(fig)
         return fig
 
@@ -99,7 +98,7 @@ class TrainPipline(LightningModule):
         self.log("lr", self.trainer.optimizers[0].param_groups[0]["lr"], prog_bar=True, on_step=True, on_epoch=False, sync_dist=True)
         self.log("train_loss", loss, prog_bar=True, on_step=True, on_epoch=False, sync_dist=True)
 
-        self.ema.step_ema(self.ema_denoiser, self.denoiser)
+        self.ema.step_ema(self.ema_model, self.model)
         with torch.inference_mode():
             fig = self.get_step_plt_images(It, predicted_It)
             self.logger.experiment.add_figure("Train Predictions", fig, self.global_step)
@@ -117,12 +116,11 @@ class TrainPipline(LightningModule):
 
         mets = self.val_metrics(It, predicted_It.clamp(-1, 1))
         self.log_dict(mets, prog_bar=True, on_step=False, on_epoch=True)
-        
 
     @torch.inference_mode()
     def on_train_epoch_end(self):
-        torch.save(self.ema_denoiser.state_dict(), 
-                   os.path.join("_checkpoint", f"mult_input_res_diffusion_{self.current_epoch}.pth"))
+        torch.save(self.ema_model.state_dict(), 
+                   os.path.join("_checkpoint", f"resshift_diff_{self.current_epoch}.pth"))
 
         batch = next(iter(self.test_dataloader))
         I0, It, I1 = batch
@@ -133,7 +131,7 @@ class TrainPipline(LightningModule):
         mid_idx = get_inter_frame_temp_index(I0, It, I1, flow0tot, flow1tot).to(It.dtype)
         tau = torch.stack([mid_idx, 1 - mid_idx], dim=1)
 
-        predicted_It = self.diffusion.reverse_process(self.ema_denoiser, [I0, I1], tau, flows=[flow0tot, flow1tot])
+        predicted_It = self.ema_model.reverse_process([I0, I1], tau)
 
         I0 = denorm(I0, self.mean, self.sd)
         I1 = denorm(I1, self.mean, self.sd)
@@ -146,7 +144,7 @@ class TrainPipline(LightningModule):
 
     def configure_optimizers(self):
         optimizer = [AdamW(
-                        self.denoiser.parameters(),
+                        self.model.parameters(),
                         **self.confg["optim_confg"]['optimizer_confg']
                     )]
          
