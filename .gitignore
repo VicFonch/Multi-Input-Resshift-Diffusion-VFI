@@ -19,5 +19,7 @@ __pycache__
 *.pt
 *.pth
 
+*.ipynb
+
 train_diffusion.py
 
