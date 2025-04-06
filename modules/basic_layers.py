@@ -6,15 +6,15 @@ from einops import rearrange
 from einops.layers.torch import Rearrange
 
 class GroupNorm(nn.Module):
-    def __init__(self, in_channels, num_groups=32):
+    def __init__(self, in_channels: int, num_groups: int = 32):
         super(GroupNorm, self).__init__()
         self.gn = nn.GroupNorm(num_groups=num_groups, num_channels=in_channels, eps=1e-6, affine=True)
     
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.gn(x)
 
 class AdaLayerNorm(nn.Module):
-    def __init__(self, channels, cond_channels=0, return_scale_shift=True):
+    def __init__(self, channels: int, cond_channels: int = 0, return_scale_shift: bool = True):
         super(AdaLayerNorm, self).__init__()
         self.norm = nn.LayerNorm(channels) 
         self.return_scale_shift = return_scale_shift
@@ -25,33 +25,31 @@ class AdaLayerNorm(nn.Module):
                 self.proj = nn.Linear(cond_channels, channels * 2, bias=False)
             nn.init.xavier_uniform_(self.proj.weight)
 
-    def forward(self, x, cond = None):
+    def expand_dims(self, tensor: torch.Tensor, dims: list[int]) -> torch.Tensor:
+        for dim in dims:
+            tensor = tensor.unsqueeze(dim)
+        return tensor
+
+    def forward(self, x: torch.Tensor, cond: torch.Tensor | None = None) -> torch.Tensor:
         x = self.norm(x)
         if cond is None:
             return x
-
-        def expand_dims(tensor, dims):
-            for dim in dims:
-                tensor = tensor.unsqueeze(dim)
-            return tensor
-        
         dims = list(range(1, len(x.shape) - 1))  
-
         if self.return_scale_shift:
             gamma, beta, sigma = self.proj(cond).chunk(3, dim=-1)
-            gamma, beta, sigma = [expand_dims(t, dims) for t in (gamma, beta, sigma)]
+            gamma, beta, sigma = [self.expand_dims(t, dims) for t in (gamma, beta, sigma)]
             return x * (1 + gamma) + beta, sigma
         else:
             gamma, beta = self.proj(cond).chunk(2, dim=-1)
-            gamma, beta = [expand_dims(t, dims) for t in (gamma, beta)]
+            gamma, beta = [self.expand_dims(t, dims) for t in (gamma, beta)]
             return x * (1 + gamma) + beta
 
 class SinusoidalPositionalEmbedding(nn.Module):
-    def __init__(self, emb_dim = 256):
+    def __init__(self, emb_dim: int = 256):
         super(SinusoidalPositionalEmbedding, self).__init__()
         self.channels = emb_dim
 
-    def forward(self, t):
+    def forward(self, t: torch.Tensor) -> torch.Tensor:
         inv_freq = 1.0 / (
             10000
             ** (torch.arange(0, self.channels, 2, device=t.device).float() / self.channels)
@@ -63,11 +61,11 @@ class SinusoidalPositionalEmbedding(nn.Module):
 
 class GatedConv2d(nn.Module):
     def __init__(self, 
-                 in_channels, 
-                 out_channels, 
-                 kernel_size=3, 
-                 padding=1, 
-                 bias=False):
+                 in_channels: int, 
+                 out_channels: int, 
+                 kernel_size: int = 3, 
+                 padding: int = 1, 
+                 bias: bool = False):
         super(GatedConv2d, self).__init__()
         self.gate_conv = nn.Conv2d(in_channels, out_channels, kernel_size=1)
         self.feature_conv = nn.Conv2d(in_channels, 
@@ -76,20 +74,20 @@ class GatedConv2d(nn.Module):
                                       padding=padding,
                                       bias=bias)
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         gate = torch.sigmoid(self.gate_conv(x))
         feature = F.silu(self.feature_conv(x)) 
         return gate * feature
 
 class ResGatedBlock(nn.Module):
     def __init__(self, 
-                 in_channels, 
-                 out_channels, 
-                 mid_channels=None, 
-                 num_groups=32,
-                 residual=True,
-                 emb_channels=None,
-                 gated_conv=False):
+                 in_channels: int, 
+                 out_channels: int, 
+                 mid_channels: int | None = None, 
+                 num_groups: int = 32,
+                 residual: bool = True,
+                 emb_channels: int | None = None,
+                 gated_conv: bool = False):
         super().__init__()
         self.residual = residual
         self.emb_channels = emb_channels
@@ -110,7 +108,7 @@ class ResGatedBlock(nn.Module):
         if in_channels != out_channels:
             self.skip = conv2d(in_channels, out_channels, kernel_size=1, padding=0)
 
-    def double_conv(self, x, emb):
+    def double_conv(self, x: torch.Tensor, emb: torch.Tensor | None = None) -> torch.Tensor:
         x = self.conv1(x)
         x = self.norm1(x)
         x = self.nonlienrity(x)
@@ -119,7 +117,7 @@ class ResGatedBlock(nn.Module):
         x = self.conv2(x)
         return self.norm2(x)
 
-    def forward(self, x, emb = None):
+    def forward(self, x: torch.Tensor, emb: torch.Tensor | None = None) -> torch.Tensor:
         if self.residual:
             if hasattr(self, 'skip'):
                 return F.silu(self.skip(x) + self.double_conv(x, emb))
