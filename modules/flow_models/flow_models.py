@@ -6,7 +6,7 @@ from modules.cupy_module import correlation
 from modules.half_warper import HalfWarper
 from modules.feature_extactor import Extractor
 
-from raft.rfr_new import RAFT
+from modules.flow_models.raft.rfr_new import RAFT
 
 class Decoder(nn.Module):
     def __init__(self, in_channels: int):

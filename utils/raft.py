@@ -1,6 +1,6 @@
 import torch
 from torchvision.models.optical_flow import raft_large 
-from raft.rfr_new import RAFT
+from modules.flow_models.raft.rfr_new import RAFT
 
 def raft_flow(I0, I1, data_domain="animation", device = 'cuda'):
     if I0.dtype != torch.float32 or I1.dtype != torch.float32:

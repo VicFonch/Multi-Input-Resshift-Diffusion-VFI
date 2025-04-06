@@ -8,7 +8,7 @@ from tqdm import tqdm
 from modules.feature_extactor import Extractor
 from modules.half_warper import HalfWarper
 from modules.cupy_module.nedt import NEDT
-from modules.flow_model import (
+from modules.flow_models.flow_models import (
     RAFTFineFlow,
     PWCFineFlow
 )
