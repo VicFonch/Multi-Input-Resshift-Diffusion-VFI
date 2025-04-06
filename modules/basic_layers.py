@@ -162,7 +162,11 @@ class Upsample(nn.Module):
         return self.conv(x) if self.use_conv else x
 
 class FeedForward(nn.Module):
-    def __init__(self, dim, emb_channels, expansion_rate = 4, dropout = 0.0):
+    def __init__(self, 
+                 dim: int, 
+                 emb_channels: int, 
+                 expansion_rate: int = 4, 
+                 dropout: float = 0.0):
         super().__init__()
         inner_dim = int(dim * expansion_rate)
         self.norm = AdaLayerNorm(dim, emb_channels)
@@ -179,18 +183,18 @@ class FeedForward(nn.Module):
         nn.init.xavier_uniform_(self.net[0].weight)
         nn.init.xavier_uniform_(self.net[3].weight)
 
-    def forward(self, x, emb = None):
+    def forward(self, x: torch.Tensor, emb: torch.Tensor | None = None) -> torch.Tensor:
         x, sigma = self.norm(x, emb)
         return self.net(x) * sigma
 
 class Attention(nn.Module):
     def __init__(
         self,
-        dim,
-        emb_channels = 512,
-        dim_head = 32,
-        dropout = 0.,
-        window_size = 7
+        dim: int,
+        emb_channels: int = 512,
+        dim_head: int = 32,
+        dropout: float = 0.,
+        window_size: int = 7
     ):
         super().__init__()
         assert (dim % dim_head) == 0, 'dimension should be divisible by dimension per head'
@@ -221,7 +225,7 @@ class Attention(nn.Module):
 
         self.register_buffer('rel_pos_indices', rel_pos_indices, persistent = False)
 
-    def forward(self, x, emb = None):
+    def forward(self, x: torch.Tensor, emb: torch.Tensor | None = None) -> torch.Tensor:
         batch, height, width, window_height, window_width, _, device, h = *x.shape, x.device, self.heads
 
         x, sigma = self.norm(x, emb)
@@ -247,14 +251,14 @@ class Attention(nn.Module):
 class MaxViTBlock(nn.Module):
     def __init__(
         self,
-        channels,
-        emb_channels = 512,
-        heads = 1,
-        window_size = 8,
-        window_attn = True,
-        grid_attn = True,
-        expansion_rate = 4,
-        dropout = 0.0,
+        channels: int,
+        emb_channels: int = 512,
+        heads: int = 1,
+        window_size: int = 8,
+        window_attn: bool = True,
+        grid_attn: bool = True,
+        expansion_rate: int = 4,
+        dropout: float = 0.0,
     ):
         super(MaxViTBlock, self).__init__()
         dim_head = channels // heads
@@ -295,7 +299,7 @@ class MaxViTBlock(nn.Module):
                                        dropout = dropout)
             self.grid_rearrange_backward = Rearrange('b x y w1 w2 d -> b d (w1 x) (w2 y)')
 
-    def forward(self, x, emb = None):
+    def forward(self, x: torch.Tensor, emb: torch.Tensor | None = None) -> torch.Tensor:
         if self.window_attn:
             x = self.wind_rearrange_forward(x)
             x = x + self.wind_attn(x, emb = emb)

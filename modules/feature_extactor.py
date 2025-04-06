@@ -1,12 +1,12 @@
+import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 import torchvision.models as models
 
 from modules.basic_layers import GroupNorm
 
 class Extractor(nn.Module):
-    def __init__(self, channels):
+    def __init__(self, channels: list[int]):
         super().__init__()
         self.layers = nn.ModuleList([
             nn.Sequential(
@@ -25,7 +25,7 @@ class Extractor(nn.Module):
             ) for i in range(len(channels) - 1)
         ])
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> list[torch.Tensor]:
         features = []
         for residual, layer in zip(self.residual, self.layers):
             x = layer(x) + residual(x)
@@ -34,7 +34,7 @@ class Extractor(nn.Module):
     
 
 class ResNetExtractor(nn.Module):
-    def __init__(self, pretrained=True, layers_to_extract=["layer1", "layer2", "layer3"]):
+    def __init__(self, pretrained: bool = True, layers_to_extract: list[str] = ["layer1", "layer2", "layer3"]):
         super(ResNetExtractor, self).__init__()
         
         resnet = models.resnet18(pretrained=pretrained)
@@ -53,7 +53,7 @@ class ResNetExtractor(nn.Module):
         
         self.layers_to_extract = layers_to_extract
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> list[torch.Tensor]:
         features = []
         x = self.initial_layers(x)
         
@@ -65,14 +65,14 @@ class ResNetExtractor(nn.Module):
         return features
     
 class VGGExtractor(nn.Module):
-    def __init__(self, layers_to_extract = [8, 15, 22, 29]):
+    def __init__(self, layers_to_extract: list[int] = [8, 15, 22, 29]):
         super(VGGExtractor, self).__init__()
         
         self.vgg = models.vgg16(pretrained=True).features
         self.layers_to_extract = layers_to_extract
         self.selected_layers = [self.vgg[i] for i in layers_to_extract]
 
-    def forward(self, x):
+    def forward(self, x: torch.Tensor) -> list[torch.Tensor]:
         features = []
         for i, layer in enumerate(self.vgg):
             x = layer(x)
