@@ -37,23 +37,28 @@ optim_confg:
     patience: 3
     verbose: True
 
+pretrained_model_path: null # Fine-tune model path
+
 model_confg:
-  pretrained_model_path: null
-  diffusion_confg:
-    kappa: 2.0
-    timesteps: 15
-    p: 0.3
-    etas_end: 0.99
-    min_noise_level: 0.04
-  denoiser_confg:
+  kappa: 2.0
+  timesteps: 20
+  p: 0.3
+  etas_end: 0.99
+  min_noise_level: 0.04
+  flow_model: raft
+  flow_kwargs:
+    pretrained_path: _pretrain_models/anime_interp_full.ckpt
+  warping_kwargs:
+    in_channels: 3
+    channels: [128, 256, 384, 512]
+  synthesis_kwargs:
     in_channels: 3
     channels: [128, 256, 384, 512]
     temb_channels: 512
-    num_conv_blocks: 1
-    flow_model: raft
     heads: 1
     window_size: 8
     window_attn: True
     grid_attn: True
-    expansion_rate: 2
+    expansion_rate: 1.5
+    num_conv_blocks: 1
     dropout: 0.0
