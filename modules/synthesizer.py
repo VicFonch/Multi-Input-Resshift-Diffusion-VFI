@@ -3,7 +3,7 @@ import torch.nn as nn
 
 from modules.basic_layers import (
     SinusoidalPositionalEmbedding,
-    DobleConv,
+    ResGatedBlock,
     MaxViTBlock,
     Downsample,
     Upsample
@@ -11,18 +11,18 @@ from modules.basic_layers import (
 
 class UnetDownBlock(nn.Module):
     def __init__(
-            self,
-            in_channels,
-            out_channels,
-            temb_channels=128,
-            heads = 1, 
-            window_size = 7,
-            window_attn = True,
-            grid_attn = True,
-            expansion_rate = 4,
-            num_conv_blocks = 2,
-            dropout = 0.0
-        ):
+        self,
+        in_channels: int,
+        out_channels: int,
+        temb_channels: int = 128,
+        heads: int = 1, 
+        window_size: int = 7,
+        window_attn: bool = True,
+        grid_attn: bool = True,
+        expansion_rate: int = 4,
+        num_conv_blocks: int = 2,
+        dropout: float = 0.0
+    ):
         super(UnetDownBlock, self).__init__()
         self.pool = Downsample(
             in_channels = in_channels,
@@ -31,7 +31,7 @@ class UnetDownBlock(nn.Module):
         )
         in_channels = 3 * in_channels + 2
         self.conv = nn.ModuleList([
-            DobleConv(
+            ResGatedBlock(
                 in_channels = in_channels if i == 0 else out_channels,
                 out_channels = out_channels,
                 emb_channels = temb_channels,
@@ -50,7 +50,13 @@ class UnetDownBlock(nn.Module):
             emb_channels = temb_channels
         )
 
-    def forward(self, x, warp0, warp1, temb):
+    def forward(
+        self, 
+        x: torch.Tensor, 
+        warp0: torch.Tensor, 
+        warp1: torch.Tensor, 
+        temb: torch.Tensor
+    ):
         x = self.pool(x)
         x = torch.cat([x, warp0, warp1], dim=1)
         for conv in self.conv:
@@ -61,21 +67,21 @@ class UnetDownBlock(nn.Module):
 class UnetMiddleBlock(nn.Module):
     def __init__(
         self,
-        in_channels,
-        mid_channels,
-        out_channels,
-        temb_channels=128,
-        heads = 1, 
-        window_size = 7,
-        window_attn = True,
-        grid_attn = True,
-        expansion_rate = 4,
-        dropout = 0.0
+        in_channels: int,
+        mid_channels: int,
+        out_channels: int,
+        temb_channels: int = 128,
+        heads: int = 1, 
+        window_size: int = 7,
+        window_attn: bool = True,
+        grid_attn: bool = True,
+        expansion_rate: int = 4,
+        dropout: float = 0.0
     ):
         super(UnetMiddleBlock, self).__init__()
 
         self.middle_blocks = nn.ModuleList([
-            DobleConv(
+            ResGatedBlock(
                 in_channels = in_channels,
                 out_channels = mid_channels,
                 emb_channels = temb_channels,
@@ -92,7 +98,7 @@ class UnetMiddleBlock(nn.Module):
                 dropout = dropout,
                 emb_channels = temb_channels
             ),
-            DobleConv(
+            ResGatedBlock(
                 in_channels = mid_channels,
                 out_channels = out_channels,
                 emb_channels = temb_channels,
@@ -107,18 +113,18 @@ class UnetMiddleBlock(nn.Module):
         
 class UnetUpBlock(nn.Module):
     def __init__(
-            self,
-            in_channels,
-            out_channels,
-            temb_channels=128,
-            heads = 1, 
-            window_size = 7,
-            window_attn = True,
-            grid_attn = True,
-            expansion_rate = 4,
-            num_conv_blocks = 2,
-            dropout = 0.0
-        ):
+        self,
+        in_channels: int,
+        out_channels: int,
+        temb_channels: int = 128,
+        heads: int = 1, 
+        window_size: int = 7,
+        window_attn: bool = True,
+        grid_attn: bool = True,
+        expansion_rate: int = 4,
+        num_conv_blocks: int = 2,
+        dropout: float = 0.0
+    ):
         super(UnetUpBlock, self).__init__()
         in_channels = 2 * in_channels
         self.maxvit = MaxViTBlock(
@@ -138,7 +144,7 @@ class UnetUpBlock(nn.Module):
             use_conv = True
         )
         self.conv = nn.ModuleList([
-            DobleConv(
+            ResGatedBlock(
                 in_channels if i == 0 else out_channels,
                 out_channels,
                 emb_channels = temb_channels, 
@@ -146,7 +152,12 @@ class UnetUpBlock(nn.Module):
             ) for i in range(num_conv_blocks)
         ])
         
-    def forward(self, x, skip_connection, temb):
+    def forward(
+        self, 
+        x: torch.Tensor, 
+        skip_connection: torch.Tensor, 
+        temb: torch.Tensor
+    ):
         x = torch.cat([x, skip_connection], dim=1)
         x = self.maxvit(x, temb)
         x = self.upsample(x)   
@@ -157,16 +168,16 @@ class UnetUpBlock(nn.Module):
 class Synthesis(nn.Module):
     def __init__(
         self,
-        in_channels,
-        channels,
-        temb_channels,
-        heads = 1,
-        window_size = 7,
-        window_attn = True,
-        grid_attn = True,
-        expansion_rate = 4,
-        num_conv_blocks = 2,
-        dropout = 0.0
+        in_channels: int,
+        channels: list[int],
+        temb_channels: int,
+        heads: int = 1,
+        window_size: int = 7,
+        window_attn: bool = True,
+        grid_attn: bool = True,
+        expansion_rate: int = 4,
+        num_conv_blocks: int = 2,
+        dropout: float = 0.0
     ):
         super(Synthesis, self).__init__()
 
@@ -175,7 +186,7 @@ class Synthesis(nn.Module):
 
         self.input_blocks = nn.ModuleList([
             nn.Conv2d(3*in_channels + 4, channels[0], kernel_size=3, padding=1),
-            DobleConv(
+            ResGatedBlock(
                 in_channels = channels[0],
                 out_channels = channels[0],
                 emb_channels = temb_channels,
@@ -228,7 +239,7 @@ class Synthesis(nn.Module):
         ])
 
         self.output_blocks = nn.ModuleList([
-            DobleConv(
+            ResGatedBlock(
                 in_channels = channels[0],
                 out_channels = channels[0],
                 emb_channels = temb_channels,
@@ -237,7 +248,13 @@ class Synthesis(nn.Module):
             nn.Conv2d(channels[0], in_channels, kernel_size=3, padding=1)
         ])
 
-    def forward(self, x, warp0, warp1, temb):
+    def forward(
+        self, 
+        x: torch.Tensor, 
+        warp0: list[torch.Tensor], 
+        warp1: list[torch.Tensor], 
+        temb: torch.Tensor
+    ):
         temb = temb.unsqueeze(-1).type(torch.float)
         temb = self.t_pos_encoding(temb)
 
