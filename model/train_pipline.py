@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from typing import Any
 
 import torch
-from torch.optim.lr_scheduler import ReduceLROnPlateau, LRScheduler
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.optim import AdamW, Optimizer
 from torch.utils.data import DataLoader
 from lightning import LightningModule

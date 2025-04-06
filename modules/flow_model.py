@@ -9,7 +9,7 @@ from modules.feature_extactor import Extractor
 from raft.rfr_new import RAFT
 
 class Decoder(nn.Module):
-    def __init__(self, in_channels):
+    def __init__(self, in_channels: int):
         super().__init__()
 
         self.syntesis = nn.Sequential(
@@ -26,7 +26,7 @@ class Decoder(nn.Module):
             nn.Conv2d(in_channels=32, out_channels=2, kernel_size=3, stride=1, padding=1)
         )
 
-    def forward(self, img1, img2, residual):
+    def forward(self, img1: torch.Tensor, img2: torch.Tensor, residual: torch.Tensor | None) -> torch.Tensor:
         width = img1.shape[3] and img2.shape[3]
         height = img1.shape[2] and img2.shape[2]
 
@@ -46,7 +46,7 @@ class Decoder(nn.Module):
         return self.syntesis(main)
 
 class PWCFineFlow(nn.Module):
-    def __init__(self):
+    def __init__(self, pretrained_path: str | None = None):
         super().__init__()
 
         self.feature_extractor = Extractor([3, 16, 32, 64, 96, 128, 192]) 
@@ -60,7 +60,10 @@ class PWCFineFlow(nn.Module):
             Decoder(192 + 81)
         ])
 
-    def forward(self, img1, img2):
+        if pretrained_path is not None:
+            self.load_state_dict(torch.load(pretrained_path))
+
+    def forward(self, img1: torch.Tensor, img2: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         width = img1.shape[3] and img2.shape[3]
         height = img1.shape[2] and img2.shape[2]
 
@@ -89,11 +92,11 @@ class PWCFineFlow(nn.Module):
 
 
 class RAFTFineFlow(nn.Module):
-    def __init__(self, pretrained_path = None):
+    def __init__(self, pretrained_path: str | None = None):
         super().__init__()
         self.raft = RAFT(pretrained_path)
 
-    def forward(self, img1, img2):
+    def forward(self, img1: torch.Tensor, img2: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
         forward = self.raft(img1, img2)
         backward = self.raft(img2, img1)
         return forward, backward
