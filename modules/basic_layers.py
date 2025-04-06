@@ -81,7 +81,7 @@ class GatedConv2d(nn.Module):
         feature = F.silu(self.feature_conv(x)) 
         return gate * feature
 
-class DobleConv(nn.Module):
+class ResGatedBlock(nn.Module):
     def __init__(self, 
                  in_channels, 
                  out_channels, 
