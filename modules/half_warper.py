@@ -19,27 +19,27 @@ class HalfWarper(nn.Module):
             padding_mode: str = 'border', 
             align_corners: bool = False
         ) -> torch.Tensor:
-        if len(img.shape)!=4: img = img[None,]
-        if len(flow.shape)!=4: flow = flow[None,]
+        if len(img.shape) != 4: img = img[None,]
+        if len(flow.shape) != 4: flow = flow[None,]
         
         q = 2 * flow / torch.tensor([
             flow.shape[-2], flow.shape[-1],
         ], device=flow.device, dtype=torch.float)[None,:,None,None]
         
         q = q + torch.stack(torch.meshgrid(
-            torch.linspace(-1,1, flow.shape[-2]),
-            torch.linspace(-1,1, flow.shape[-1]),
+            torch.linspace(-1, 1, flow.shape[-2]),
+            torch.linspace(-1, 1, flow.shape[-1]),
         ))[None,].to(flow.device)
         
-        if img.dtype!=q.dtype:
+        if img.dtype != q.dtype:
             img = img.type(q.dtype)
 
         return F.grid_sample(
             img,
-            q.flip(dims=(1,)).permute(0,2,3,1).contiguous(),
-            mode=resample, # nearest, bicubic, bilinear
-            padding_mode=padding_mode,  # border, zeros, reflection
-            align_corners=align_corners,
+            q.flip(dims=(1,)).permute(0, 2, 3, 1).contiguous(),
+            mode = resample, # nearest, bicubic, bilinear
+            padding_mode = padding_mode,  # border, zeros, reflection
+            align_corners = align_corners,
         )
     
     @staticmethod
@@ -50,27 +50,28 @@ class HalfWarper(nn.Module):
             metric: torch.Tensor | None = None, 
             mask: bool = True
         ) -> torch.Tensor:
-        if len(img.shape)!=4: img = img[None,]
-        if len(flow.shape)!=4: flow = flow[None,]
+        if len(img.shape) != 4: img = img[None,]
+        if len(flow.shape) != 4: flow = flow[None,]
         if metric is not None and len(metric.shape)!=4: metric = metric[None,]
+        
         flow = flow.flip(dims=(1,))
-        if img.dtype!=torch.float32:
+        if img.dtype != torch.float32:
             img = img.type(torch.float32)
-        if flow.dtype!=torch.float32:
+        if flow.dtype != torch.float32:
             flow = flow.type(torch.float32)
-        if metric is not None and metric.dtype!=torch.float32:
+        if metric is not None and metric.dtype != torch.float32:
             metric = metric.type(torch.float32)
         
-        assert img.device==flow.device
-        if metric is not None: assert img.device==metric.device
+        assert img.device == flow.device
+        if metric is not None: assert img.device == metric.device
         if img.device.type=='cpu':
             img = img.to('cuda')
             flow = flow.to('cuda')
             if metric is not None: metric = metric.to('cuda')
         
         if mask:
-            bs,ch,h,w = img.shape
-            img = torch.cat([img, torch.ones(bs,1,h,w, dtype=img.dtype, device=img.device)], dim=1)
+            batch, _, h, w = img.shape
+            img = torch.cat([img, torch.ones(batch, 1, h, w, dtype=img.dtype, device=img.device)], dim=1)
         
         return FunctionSoftsplat(img, flow, metric, mode)
     
