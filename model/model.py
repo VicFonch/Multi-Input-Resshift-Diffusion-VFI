@@ -44,7 +44,7 @@ class FeatureWarper(nn.Module):
         I1 = torch.cat([I1, self.nedt(I1)], dim=1)
 
         z0to1, z1to0 = HalfWarper.z_metric(I0, I1, flow0to1, flow1to0)
-        base0, base1 = self.half_warper(I0, I1, flow0tot, flow1to0, z0to1, z1to0)
+        base0, base1 = self.half_warper(I0, I1, flow0tot, flow1tot, z0to1, z1to0)
         warped0, warped1 = [base0], [base1]
 
         features0 = self.feature_extractor(I0)
