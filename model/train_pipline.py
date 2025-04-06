@@ -1,11 +1,12 @@
 import os
 import copy
 import matplotlib.pyplot as plt
+from typing import Any
 
 import torch
-from torch.optim.lr_scheduler import ReduceLROnPlateau
-from torch.optim import AdamW
-
+from torch.optim.lr_scheduler import ReduceLROnPlateau, LRScheduler
+from torch.optim import AdamW, Optimizer
+from torch.utils.data import DataLoader
 from lightning import LightningModule
 
 from torchmetrics import MetricCollection
@@ -15,15 +16,17 @@ from torchmetrics.image import LearnedPerceptualImagePatchSimilarity as LPIPS
 
 from model.model import MultiInputResShift
 
-from utils.utils import denorm, save_triplet, make_grid_images
+from utils.utils import denorm, make_grid_images#, save_triplet 
 from utils.ema import EMA
 from utils.inter_frame_idx import get_inter_frame_temp_index
 from utils.raft import raft_flow
 
 
-class TrainerDiffusion(LightningModule):
-    def __init__(self, confg, test_dataloader):
-        super(TrainerDiffusion, self).__init__()
+class TrainPipline(LightningModule):
+    def __init__(self, 
+                 confg: dict, 
+                 test_dataloader: DataLoader):
+        super(TrainPipline, self).__init__()
 
         self.test_dataloader = test_dataloader
 
@@ -50,18 +53,26 @@ class TrainerDiffusion(LightningModule):
             "val_ssim": SSIM()
         })
 
-    def loss_fn(self, x, predicted_x):
+    def loss_fn(self, 
+                x: torch.Tensor, 
+                predicted_x: torch.Tensor) -> torch.Tensor:
         percep_loss = 0.2 * self.lpips_loss(x, predicted_x.clamp(-1, 1))
         pix2pix_loss = self.charbonnier_loss(x, predicted_x)
         return percep_loss + pix2pix_loss
 
-    def sample_t(self, shape, max_t, device):
+    def sample_t(self, 
+                 shape: tuple[int, ...], 
+                 max_t: int, 
+                 device: torch.device) -> torch.Tensor:
         p = torch.linspace(1, max_t, steps=max_t, device=device) ** 2 
         p = p / p.sum()  
         t = torch.multinomial(p, num_samples=shape[0], replacement=True)
         return t
 
-    def forward(self, I0, It, I1):
+    def forward(self, 
+                I0: torch.Tensor, 
+                It: torch.Tensor, 
+                I1: torch.Tensor) -> torch.Tensor:
         flow0tot = raft_flow(I0, It, 'animation')
         flow1tot = raft_flow(I1, It, 'animation')
         mid_idx = get_inter_frame_temp_index(I0, It, I1, flow0tot, flow1tot).to(It.dtype)
@@ -76,7 +87,9 @@ class TrainerDiffusion(LightningModule):
         predicted_It = self.model(I0, It, I1, tau=tau, t=t)
         return predicted_It
 
-    def get_step_plt_images(self, It, predicted_It):
+    def get_step_plt_images(self, 
+                            It: torch.Tensor, 
+                            predicted_It: torch.Tensor) -> plt.Figure:
         fig, ax = plt.subplots(1, 2, figsize=(20, 10))
         ax[0].imshow(denorm(predicted_It.clamp(-1, 1), self.mean, self.sd)[0].permute(1, 2, 0).cpu().numpy())
         ax[0].axis("off")
@@ -90,7 +103,7 @@ class TrainerDiffusion(LightningModule):
         plt.close(fig)
         return fig
 
-    def training_step(self, batch, _):
+    def training_step(self, batch: tuple[torch.Tensor, ...], _) -> torch.Tensor:
         I0, It, I1 = batch
         predicted_It = self(I0, It, I1)
         loss = self.loss_fn(It, predicted_It)
@@ -107,7 +120,7 @@ class TrainerDiffusion(LightningModule):
         return loss
     
     @torch.no_grad()
-    def validation_step(self, batch, _):
+    def validation_step(self,  batch: tuple[torch.Tensor, ...], _) -> None:
         I0, It, I1 = batch
         predicted_It = self(I0, It, I1)
         loss = self.loss_fn(It, predicted_It)
@@ -118,7 +131,7 @@ class TrainerDiffusion(LightningModule):
         self.log_dict(mets, prog_bar=True, on_step=False, on_epoch=True)
 
     @torch.inference_mode()
-    def on_train_epoch_end(self):
+    def on_train_epoch_end(self) -> None:
         torch.save(self.ema_model.state_dict(), 
                    os.path.join("_checkpoint", f"resshift_diff_{self.current_epoch}.pth"))
 
@@ -142,7 +155,7 @@ class TrainerDiffusion(LightningModule):
         grid = make_grid_images([I0, It, predicted_It, I1], nrow=1)
         self.logger.experiment.add_image("Predicted Images", grid, self.global_step)
 
-    def configure_optimizers(self):
+    def configure_optimizers(self) -> tuple[list[Optimizer], list[dict[str, Any]]]:
         optimizer = [AdamW(
                         self.model.parameters(),
                         **self.confg["optim_confg"]['optimizer_confg']
