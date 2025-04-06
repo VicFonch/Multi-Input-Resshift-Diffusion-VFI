@@ -34,7 +34,7 @@ class FeatureWarper(nn.Module):
         flow0to1: torch.Tensor, 
         flow1to0: torch.Tensor, 
         tau: torch.Tensor = None
-    ):
+    ) -> tuple[list[torch.Tensor], list[torch.Tensor]]:
         assert tau.shape == (I0.shape[0], 2), "tau shape must be (batch, 2)"
 
         flow0tot = tau[:, 0][:, None, None, None] * flow0to1
@@ -114,7 +114,7 @@ class MultiInputResShift(nn.Module):
         Y: list[torch.Tensor], 
         tau: torch.Tensor | float | None, 
         t: torch.Tensor | int
-    ):
+    ) -> torch.Tensor:
         assert tau.shape == (x.shape[0], len(Y)), "tau shape must be (batch, len(Y))"
         
         if tau is None:
@@ -149,7 +149,7 @@ class MultiInputResShift(nn.Module):
         tau: torch.Tensor | float, 
         flows: list[torch.Tensor] | None = None,
         **kwargs
-    ):
+    ) -> torch.Tensor:
         y = Y[0]
         batch, device = y.shape[0], y.device
         
@@ -206,7 +206,7 @@ class MultiInputResShift(nn.Module):
         flow0to1: torch.Tensor | None = None, 
         tau: torch.Tensor | None = None,
         t: torch.Tensor | None = None
-    ):
+    ) -> torch.Tensor:
 
         if tau is None:
             tau = torch.full((It.shape[0], 2), 0.5, device=It.device, dtype=It.dtype)
