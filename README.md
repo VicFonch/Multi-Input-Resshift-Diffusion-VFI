@@ -31,8 +31,6 @@ We perform extensive evaluations against state-of-the-art methods and show that 
 
 ---
 
----
-
 ## ⚙️ Setup
 
 To install the required environment:
