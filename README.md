@@ -101,7 +101,7 @@ The output will be a predicted `frame2.png` saved in the specified output direct
 To train the model from scratch or fine-tune on your own data:
 
 ```bash
-python train.py --config config.yaml
+python train.py --config config.yaml --data_path _data/ATD-12K
 ```
 
 Make sure you have placed the required RFR weights in the `_pretrain_models/` folder as mentioned above and add the path in `config.yaml`
