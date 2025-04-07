@@ -6,7 +6,6 @@
 *.tiff
 *.ico
 
-metrics
 __pycache__
 
 *.pyc
@@ -18,8 +17,8 @@ __pycache__
 *.ckpt
 *.pt
 *.pth
+!metrics/flolpips/weights/v0.1/alex.pth
 
 *.ipynb
 
-train_diffusion.py
 
