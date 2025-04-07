@@ -29,6 +29,3 @@ tensorboard>=2.8.0
 
 # FLOLPIPS (Quality Metrics)
 # Note: FLOLPIPS is included in the project code; no external installation is required.
-
-# Optional dependencies for development
-jupyter>=1.0.0  # For notebooks 
