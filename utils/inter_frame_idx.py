@@ -7,7 +7,7 @@ import cv2
 import numpy as np
 
 class FlowEstimation:
-    def __init__(self, flow_estimator="farneback"):
+    def __init__(self, flow_estimator: str = "farneback"):
         assert flow_estimator in ["farneback", "dualtvl1"], "Flow estimator must be one of [farneback, dualtvl1]"
 
         if flow_estimator == "farneback":
@@ -17,7 +17,7 @@ class FlowEstimation:
         else:
             raise NotImplementedError
 
-    def OptFlow_Farneback(self, I0, I1):
+    def OptFlow_Farneback(self, I0: torch.Tensor, I1: torch.Tensor) -> torch.Tensor:
         device = I0.device
         
         I0 = I0.cpu().clamp(0, 1) * 255
@@ -40,7 +40,10 @@ class FlowEstimation:
 
         return flows.to(device)
 
-    def OptFlow_DualTVL1(self, I0, I1,
+    def OptFlow_DualTVL1(
+        self, 
+        I0: torch.Tensor, 
+        I1: torch.Tensor,
         tau: float = 0.25,
         lambda_: float = 0.15,
         theta: float = 0.3,
@@ -51,7 +54,7 @@ class FlowEstimation:
         outer_iterations: int = 10,
         scale_step: float = 0.8,
         gamma: float = 0.0
-    ):
+    ) -> torch.Tensor:
         optical_flow = cv2.optflow.createOptFlow_DualTVL1()
         optical_flow.setTau(tau)
         optical_flow.setLambda(lambda_)
@@ -86,10 +89,19 @@ class FlowEstimation:
 
         return flows.to(device)
     
-    def __call__(self, I1, I0):
+    def __call__(self, I1: torch.Tensor, I0: torch.Tensor) -> torch.Tensor:
         return self.flow_estimator(I1, I0)
 
-def get_inter_frame_temp_index(I0, It, I1, flow0tot, flow1tot, k = 5, threshold = 2e-2):
+def get_inter_frame_temp_index(
+    I0: torch.Tensor, 
+    It: torch.Tensor, 
+    I1: torch.Tensor, 
+    flow0tot: torch.Tensor, 
+    flow1tot: torch.Tensor, 
+    k: int = 5, 
+    threshold: float = 2e-2
+) -> torch.Tensor:
+
     I0_gray = rgb_to_grayscale(I0)
     It_gray = rgb_to_grayscale(It)
     I1_gray = rgb_to_grayscale(I1)
