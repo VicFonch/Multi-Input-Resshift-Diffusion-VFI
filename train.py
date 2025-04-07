@@ -38,6 +38,6 @@ if __name__ == "__main__":
     test_dataset = TripletImagesDataset(args.test_dir, **data_confg)
     test_dataloader = DataLoader(test_dataset, batch_size=data_confg['test_batch_size'], shuffle=True)
 
-    model = TrainPipline(config, test_dataloader)
+    train_pipline = TrainPipline(config, test_dataloader)
 
-    trainer.fit(model, train_dataloader, val_dataloader)
+    trainer.fit(train_pipline, train_dataloader, val_dataloader)

@@ -1,0 +1,34 @@
+# Main dependencies
+torch>=2.0.0
+torchvision>=0.15.0
+lightning>=2.0.0
+numpy>=1.21.0
+matplotlib>=3.5.0
+yaml>=6.0.0
+
+# Image processing and computer vision
+kornia>=0.6.0
+opencv-python>=4.5.0
+einops>=0.6.0
+
+# Custom cuda implementation /modules/cupy_module/
+cupy-cuda12x>=12.0.0  # For CUDA 12.4
+# Note: For cupy, you need to install the specific version for your CUDA version
+# Examples:
+# cupy-cuda11x for CUDA 11.x
+# cupy-cuda12x for CUDA 12.x
+# cupy-cuda10x for CUDA 10.x
+
+# Utilities and tools
+scipy>=1.7.0
+tensorboard>=2.8.0
+
+# Project-Specific Dependencies
+# RAFT (Flow Estimation)
+# Note: RAFT is included in the project code; no external installation is required.
+
+# FLOLPIPS (Quality Metrics)
+# Note: FLOLPIPS is included in the project code; no external installation is required.
+
+# Optional dependencies for development
+jupyter>=1.0.0  # For notebooks 
