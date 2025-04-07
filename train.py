@@ -12,9 +12,9 @@ from datamodule.datamodule import TripletImagesDataset
 def parse_args():
     parser = ArgumentParser()
     parser.add_argument("--config", type=str, default="config/confg.yaml")
-    parser.add_argument("--train_dir", type=str, default="")
-    parser.add_argument("--val_dir", type=str, default="")
-    parser.add_argument("--test_dir", type=str, default="")
+    parser.add_argument("--train_dir", type=str, default="_data/ATD-12K/train")
+    parser.add_argument("--val_dir", type=str, default="_data/ATD-12K/val")
+    parser.add_argument("--test_dir", type=str, default="_data/ATD-12K/test")
     return parser.parse_args()
 
 if __name__ == "__main__":
