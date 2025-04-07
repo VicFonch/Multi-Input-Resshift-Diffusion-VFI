@@ -1,8 +1,12 @@
+import torch
 import itertools
 from torchmetrics.image import LearnedPerceptualImagePatchSimilarity as LPIPS
 from utils.utils import denorm
 
-def compute_lpips_variability(samples, net='alex', device='cuda'):
+def compute_lpips_variability(samples: torch.Tensor, 
+                              net: str = 'alex', 
+                              device: str = 'cuda'
+                              ) -> float:
     loss_fn = LPIPS(net_type=net).to(device)
     loss_fn.eval()
 
@@ -11,7 +15,6 @@ def compute_lpips_variability(samples, net='alex', device='cuda'):
 
     N = samples.size(0)
     scores = []
-
     for i, j in itertools.combinations(range(N), 2):
         x = samples[i:i+1].to(device)
         y = samples[j:j+1].to(device)
@@ -20,31 +23,25 @@ def compute_lpips_variability(samples, net='alex', device='cuda'):
 
     return sum(scores) / len(scores)
 
-def compute_pixelwise_correlation(samples):
+def compute_pixelwise_correlation(samples: torch.Tensor) -> float:
     N, C, H, W = samples.shape
     samples_flat = samples.view(N, C, -1)  # (N, C, H*W)
 
     corrs = []
-
     for i, j in itertools.combinations(range(N), 2):
         x = samples_flat[i]  # (C, HW)
         y = samples_flat[j]  # (C, HW)
-
         mean_x = x.mean(dim=1, keepdim=True)
         mean_y = y.mean(dim=1, keepdim=True)
-
         x_centered = x - mean_x
         y_centered = y - mean_y
-
         numerator = (x_centered * y_centered).sum(dim=1)
         denominator = (x_centered.norm(dim=1) * y_centered.norm(dim=1)) + 1e-8
-
         corr = numerator / denominator  # (C,)
         corrs.append(corr.mean().item())
-
     return sum(corrs) / len(corrs)
 
-def compute_dynamic_range(samples):
+def compute_dynamic_range(samples: torch.Tensor) -> float:
     max_vals, _ = samples.max(dim=0)  # (C, H, W)
     min_vals, _ = samples.min(dim=0)  # (C, H, W)
     
