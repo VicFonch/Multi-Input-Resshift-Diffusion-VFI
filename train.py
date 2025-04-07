@@ -1,3 +1,4 @@
+import os
 import yaml
 
 from argparse import ArgumentParser
@@ -12,9 +13,7 @@ from datamodule.datamodule import TripletImagesDataset
 def parse_args():
     parser = ArgumentParser()
     parser.add_argument("--config", type=str, default="config/confg.yaml")
-    parser.add_argument("--train_dir", type=str, default="_data/ATD-12K/train")
-    parser.add_argument("--val_dir", type=str, default="_data/ATD-12K/val")
-    parser.add_argument("--test_dir", type=str, default="_data/ATD-12K/test")
+    parser.add_argument("--data_path", type=str, default="_data/ATD-12K")
     return parser.parse_args()
 
 if __name__ == "__main__":
@@ -31,11 +30,15 @@ if __name__ == "__main__":
 
     data_confg = config['data_confg']
 
-    train_dataset = TripletImagesDataset(args.train_dir, **data_confg)
+    train_dir = os.path.join(args.data_path, "train")
+    val_dir = os.path.join(args.data_path, "val")
+    test_dir = os.path.join(args.data_path, "test")
+
+    train_dataset = TripletImagesDataset(train_dir, **data_confg)
     train_dataloader = DataLoader(train_dataset, batch_size=data_confg['train_batch_size'], shuffle=True)
-    val_dataset = TripletImagesDataset(args.val_dir, **data_confg)
+    val_dataset = TripletImagesDataset(val_dir, **data_confg)
     val_dataloader = DataLoader(val_dataset, batch_size=data_confg['val_batch_size'], shuffle=False)
-    test_dataset = TripletImagesDataset(args.test_dir, **data_confg)
+    test_dataset = TripletImagesDataset(test_dir, **data_confg)
     test_dataloader = DataLoader(test_dataset, batch_size=data_confg['test_batch_size'], shuffle=True)
 
     train_pipline = TrainPipline(config, test_dataloader)
