@@ -16,17 +16,18 @@ from torchvision.transforms import (
 )
 
 class TargetImageDataset(Dataset):
-    def __init__(self, data_dir, 
-                 size = (256, 512),
-                 mean = [0.5, 0.5, 0.5], 
-                 sd = [0.5, 0.5, 0.5],
-                 amount_augmentations = 1,
-                 horizontal_flip = 0.5,
-                 rotation = 15,
-                 brightness = 0.2,
-                 contrast = 0.2,
-                 saturation = 0.2,
-                 hue = 0.1,
+    def __init__(self, 
+                 data_dir: str, 
+                 size: tuple[int, int] = (256, 512),
+                 mean: list[float] = [0.5, 0.5, 0.5], 
+                 sd: list[float] = [0.5, 0.5, 0.5],
+                 amount_augmentations: int = 1,
+                 horizontal_flip: float = 0.5,
+                 rotation: float = 15,
+                 brightness: float = 0.2,
+                 contrast: float = 0.2,
+                 saturation: float = 0.2,
+                 hue: float = 0.1,
         ):
         assert amount_augmentations >= 1, 'amount_augmentations must be greater than or equal to 1'
 
@@ -77,18 +78,18 @@ class TargetImageDataset(Dataset):
         return image
 
 class TwoImagesDataset(Dataset):
-    def __init__(self, data_dir, 
-                 size = (256, 256),
-                 mean = [0.5, 0.5, 0.5], 
-                 sd = [0.5, 0.5, 0.5],
-                 amount_augmentations = 1,
-                 horizontal_flip = 0.5,
-                 time_flip = True,
-                 rotation = 0.5,
-                 brightness = 0.1,
-                 contrast = 0.1,
-                 saturation = 0.1,
-                 hue = 0.1,
+    def __init__(self, data_dir: str, 
+                 size: tuple[int, int] = (256, 256),
+                 mean: list[float] = [0.5, 0.5, 0.5], 
+                 sd: list[float] = [0.5, 0.5, 0.5],
+                 amount_augmentations: int = 1,
+                 horizontal_flip: float = 0.5,
+                 time_flip: bool = True,
+                 rotation: float = 0.5,
+                 brightness: float = 0.1,
+                 contrast: float = 0.1,
+                 saturation: float = 0.1,
+                 hue: float = 0.1,
         ):
         assert amount_augmentations >= 1, 'amount_augmentations must be greater than or equal to 1'
 
@@ -140,18 +141,18 @@ class TwoImagesDataset(Dataset):
 
 class TripletImagesDataset(Dataset):
     def __init__(self,
-                 data_dir, 
-                 size=(256, 256),
-                 mean=[0.5, 0.5, 0.5], 
-                 sd=[0.5, 0.5, 0.5],
-                 amount_augmentations=1,
-                 horizontal_flip=0.5,
-                 time_flip=0,
-                 rotation=0,  
-                 brightness=0.2,
-                 contrast=0.2,
-                 saturation=0.2,
-                 hue=0.1):
+                 data_dir: str, 
+                 size: tuple[int, int] = (256, 256),
+                 mean: list[float] = [0.5, 0.5, 0.5], 
+                 sd: list[float] = [0.5, 0.5, 0.5],
+                 amount_augmentations: int = 1,
+                 horizontal_flip: float = 0.5,
+                 time_flip: bool = True,
+                 rotation: float = 0,  
+                 brightness: float = 0.2,
+                 contrast: float = 0.2,
+                 saturation: float = 0.2,
+                 hue: float = 0.1):
 
         assert amount_augmentations >= 1, 'amount_augmentations must be at least 1'
 
@@ -215,9 +216,9 @@ class TripletImagesDataset(Dataset):
 
 
 class TwoImagesWithFlowDataset(Dataset):
-    def __init__(self, data_dir, 
-                 mean = [0.5, 0.5, 0.5], 
-                 sd = [0.5, 0.5, 0.5],
+    def __init__(self, data_dir: str, 
+                 mean: list[float] = [0.5, 0.5, 0.5], 
+                 sd: list[float] = [0.5, 0.5, 0.5],
         ):
         self.data_dir = data_dir
         subfolders = [folder for folder in os.listdir(data_dir) if os.path.isdir(os.path.join(data_dir, folder))]
@@ -260,9 +261,9 @@ class TwoImagesWithFlowDataset(Dataset):
 
 
 class TripletImagesWithFlowsDataset(Dataset):
-    def __init__(self, data_dir, 
-                 mean = [0.5, 0.5, 0.5], 
-                 sd = [0.5, 0.5, 0.5]
+    def __init__(self, data_dir: str, 
+                 mean: list[float] = [0.5, 0.5, 0.5], 
+                 sd: list[float] = [0.5, 0.5, 0.5]
         ):
         self.data_dir = data_dir
         subfolders = [folder for folder in os.listdir(data_dir) if os.path.isdir(os.path.join(data_dir, folder))]
