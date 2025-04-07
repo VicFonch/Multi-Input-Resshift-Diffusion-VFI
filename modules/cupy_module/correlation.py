@@ -5,6 +5,8 @@ import os
 import re
 import torch
 
+# Code taken from https://github.com/sniklaus/softmax-splatting/blob/master/correlation/correlation.py
+
 kernel_Correlation_rearrange = '''
     extern "C" __global__ void kernel_Correlation_rearrange(
         const int n,
