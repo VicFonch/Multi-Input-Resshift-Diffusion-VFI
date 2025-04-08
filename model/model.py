@@ -121,7 +121,7 @@ class MultiInputResShift(nn.Module):
             tau: torch.Tensor = torch.full((x.shape[0], len(Y)), 0.5, device=x.device, dtype=x.dtype)
         elif isinstance(tau, float):
             assert tau >= 0 and tau <= 1, "tau must be between 0 and 1"
-            tau: torch.Tensor = torch.stack([
+            tau: torch.Tensor = torch.cat([
                 torch.full((x.shape[0], 1), tau, device=x.device, dtype=x.dtype),
                 torch.full((x.shape[0], 1), 1 - tau, device=x.device, dtype=x.dtype)
             ], dim=1)
@@ -148,18 +148,16 @@ class MultiInputResShift(nn.Module):
         Y: list[torch.Tensor],
         tau: torch.Tensor | float, 
         flows: list[torch.Tensor] | None = None,
-        **kwargs
     ) -> torch.Tensor:
         y = Y[0]
-        batch, device = y.shape[0], y.device
+        batch, device, dtype = y.shape[0], y.device, y.dtype
         
         if isinstance(tau, float):
             assert tau >= 0 and tau <= 1, "tau must be between 0 and 1"
-            tau: torch.Tensor = torch.stack([
-                torch.full((batch, 1), tau, device=x.device, dtype=x.dtype),
-                torch.full((batch, 1), 1 - tau, device=x.device, dtype=x.dtype)
+            tau: torch.Tensor = torch.cat([
+                torch.full((batch, 1), tau, device=device, dtype=dtype),
+                torch.full((batch, 1), 1 - tau, device=device, dtype=dtype)
             ], dim=1)
-
         if flows is None:
            flow0to1, flow1to0 = self.flow_model(Y[0], Y[1])
         else:
