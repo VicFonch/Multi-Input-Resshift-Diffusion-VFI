@@ -8,7 +8,7 @@ _(Waiting for acceptance)_
 
 **Víctor Manuel Fonte Chávez · Jean-Bernard Hayet · Claudia Esteves**
 
-[arXiv (Coming Soon)]() · [GitHub Repo](https://github.com/VicFonch/Multi-Input-Resshift-Diffusion-VFI)
+[arXiv](https://arxiv.org/pdf/2504.05402) · [GitHub Repo](https://github.com/VicFonch/Multi-Input-Resshift-Diffusion-VFI)
 
 **From CIMAT (Research Center in Mathematics)**  
 Accepted at the **24th ACM SIGGRAPH / Eurographics Symposium on Computer Animation**
@@ -86,13 +86,15 @@ _data/ATD-12k/
 Once you have downloaded the pretrained weights, you can run inference on a sequence of frames using:
 
 ```bash
-python inference.py --input_dir path/to/sequence --output_dir path/to/save --tau 0.5
+python inference.py --img0_path path/to/img0 --img1_path path/to/img1 --output_path path/to/save --tau_val 0.5 --num_samples 1
 ```
 
-- `--input_dir`: Folder containing `frame1.png` and `frame3.png`
-- `--tau`: The interpolation time (e.g., 0.5 for halfway, 0.25 for closer to frame1)
+- `--img0_path` and `--img1_path`: Paths to the input images (e.g., `frame1.png` and `frame3.png`)
+- `--output_path`: Folder where the interpolated frame will be saved
+- `--tau_val`: The interpolation time (e.g., `0.5` for halfway between the frames, `0.25` for closer to `img0`, and `0.75` for closer to `img1`)
+- `--num_samples`: Number of stochastic samples to generate (useful for uncertainty estimation; set to `1` for deterministic output)
 
-The output will be a predicted `frame2.png` saved in the specified output directory.
+The output will be a predicted `frame2.png` saved in the specified output directory. If `--num_samples > 1`, the `--tau_val` argument will be ignored and a linear spacing of `num_samples` tau values between `0` and `1` (excluding endpoints) will be used instead.
 
 ---
 
@@ -128,3 +130,21 @@ python evaluate_uncertainty.py --root_path _data/ATD-12K/test --tau_val 0.5 --nu
 ```
 
 Add `--by_category True` to evaluate separately for animation styles like _Disney_ or _Japan_.
+
+---
+
+## 📚 Citation
+
+If you find this work useful in your research, please consider citing:
+
+```bibtex
+@misc{chavez2025timeadaptivevideoframeinterpolation,
+  title        = {Time-adaptive Video Frame Interpolation based on Residual Diffusion},
+  author       = {Victor Fonte Chavez and Claudia Esteves and Jean-Bernard Hayet},
+  year         = {2025},
+  eprint       = {2504.05402},
+  archivePrefix = {arXiv},
+  primaryClass = {cs.CV},
+  url          = {https://arxiv.org/abs/2504.05402}
+}
+```
