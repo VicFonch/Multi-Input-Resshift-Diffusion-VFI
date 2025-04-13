@@ -53,7 +53,7 @@ def main():
 
     if args.num_samples > 1:
         It_list = []
-        tau_list = torch.linspace(0, 1, args.num_samples)
+        tau_list = torch.linspace(0, 1, args.num_samples + 2)[1:-1]
         for i in range(args.num_samples):
             It_list.append(model.reverse_process([img0, img2], tau_list[i]))
         save_image(It_list, f"{args.output_path}/It_{i}.png")
