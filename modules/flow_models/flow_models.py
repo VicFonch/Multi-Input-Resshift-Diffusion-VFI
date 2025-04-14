@@ -32,7 +32,7 @@ class Decoder(nn.Module):
 
         if residual is None:
             corr = correlation.FunctionCorrelation(tenOne=img1, tenTwo=img2)
-            main = torch.cat([img1, corr], 1)
+            main = torch.cat([img1, corr], dim=1)
         else:
             flow = interpolate(input=residual, 
                                size=(height, width), 
@@ -41,7 +41,7 @@ class Decoder(nn.Module):
                                 float(residual.shape[3]) * float(width)
             backwarp_img = HalfWarper.backward_wrapping(img=img2, flow=flow)
             corr = correlation.FunctionCorrelation(tenOne=img1, tenTwo=backwarp_img)
-            main = torch.cat([img1, corr, flow], 1)
+            main = torch.cat([img1, corr, flow], dim=1)
 
         return self.syntesis(main)
 
