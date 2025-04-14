@@ -6,29 +6,35 @@ import torchvision.models as models
 from modules.basic_layers import GroupNorm
 
 class Extractor(nn.Module):
-    def __init__(self, channels: list[int]):
+    def __init__(self, channels: list[int], num_groups: int = 32, use_residual: bool = True):
         super().__init__()
+        
+        self.use_residual = use_residual
+
         self.layers = nn.ModuleList([
             nn.Sequential(
                 nn.Conv2d(in_channels=channels[i], out_channels=channels[i + 1], kernel_size=3, stride=2, padding=1),
-                GroupNorm(channels[i + 1]),
+                GroupNorm(channels[i + 1], num_groups = num_groups),
                 nn.SiLU(),
                 nn.Conv2d(in_channels=channels[i + 1], out_channels=channels[i + 1], kernel_size=3, stride=1, padding=1),
-                GroupNorm(channels[i + 1]),
+                GroupNorm(channels[i + 1], num_groups = num_groups),
                 nn.SiLU()
             ) for i in range(len(channels) - 1)
         ])
-
-        self.residual = nn.ModuleList([
-            nn.Sequential(
-                nn.Conv2d(in_channels=channels[i], out_channels=channels[i + 1], kernel_size=3, stride=2, padding=1),
-            ) for i in range(len(channels) - 1)
-        ])
+        if self.use_residual:
+            self.residual = nn.ModuleList([
+                nn.Sequential(
+                    nn.Conv2d(in_channels=channels[i], out_channels=channels[i + 1], kernel_size=3, stride=2, padding=1),
+                ) for i in range(len(channels) - 1)
+            ])
 
     def forward(self, x: torch.Tensor) -> list[torch.Tensor]:
         features = []
         for residual, layer in zip(self.residual, self.layers):
-            x = layer(x) + residual(x)
+            if self.use_residual:
+                x = layer(x) + residual(x)
+            else:
+                x = layer(x)
             features.append(x)
         return features
     

@@ -49,7 +49,7 @@ class PWCFineFlow(nn.Module):
     def __init__(self, pretrained_path: str | None = None):
         super().__init__()
 
-        self.feature_extractor = Extractor([3, 16, 32, 64, 96, 128, 192]) 
+        self.feature_extractor = Extractor([3, 16, 32, 64, 96, 128, 192], num_groups=16) 
 
         self.decoders = nn.ModuleList([
             Decoder(16 + 81 + 2),
