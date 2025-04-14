@@ -15,7 +15,7 @@ from argparse import ArgumentParser
 def parse_args():
     parser = ArgumentParser()
     parser.add_argument("--confg_path", type=str, default=r"config\confg.yaml")
-    parser.add_argument("--checkpoint_path", type=str, default=r"_checkpoint\muti_input_resshift.pth")
+    parser.add_argument("--checkpoint_path", type=str, default=r"_checkpoint\residual_diff_rfr.pth")
     parser.add_argument("--img0_path", type=str, default=r"_data\example_images\frame1.png")
     parser.add_argument("--img2_path", type=str, default=r"_data\example_images\frame3.png")
     parser.add_argument("--tau_val", type=float, default=0.5)
