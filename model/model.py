@@ -99,9 +99,9 @@ class MultiInputResShift(nn.Module):
         self.register_buffer("backward_std", self.kappa*torch.sqrt(self.sum_prev_eta*self.sum_alpha/self.sum_eta))
 
         if flow_model == 'raft':
-            self.flow_model = RAFTFineFlow(**flow_kwargs).requires_grad_(False).eval()
+            self.flow_model = RAFTFineFlow(**flow_kwargs)
         elif flow_model == 'pwc':
-            self.flow_model = PWCFineFlow(**flow_kwargs).requires_grad_(False).eval()
+            self.flow_model = PWCFineFlow(**flow_kwargs)
         else:
             raise ValueError(f"Flow model {flow_model} not supported")
 

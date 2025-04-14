@@ -35,6 +35,7 @@ class TrainPipline(LightningModule):
         self.mean, self.sd = confg["data_confg"]["mean"], confg["data_confg"]["sd"]
 
         self.model = MultiInputResShift(**confg["model_confg"])
+        self.model.flow_model.requires_grad_(False).eval()
 
         self.ema = EMA(beta=0.995)
         self.ema_model = copy.deepcopy(self.model).eval().requires_grad_(False)
