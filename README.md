@@ -36,8 +36,8 @@ We perform extensive evaluations against state-of-the-art methods and show that 
 To install the required environment:
 
 ```bash
-conda create -n resshift python=3.10
-conda activate resshift
+conda create -n multi-input-resshift python=3.10
+conda activate multi-input-resshift
 pip install -r requirements.txt
 ```
 
@@ -47,7 +47,7 @@ pip install -r requirements.txt
 
 ## 🧩 Pretrained Models
 
-Download our pretrained weights from **[Our weights](#)** and place them inside the `_checkpoint/` directory.
+Download our pretrained weights from **[Our weights](https://drive.google.com/drive/u/2/folders/1RrrIPt8eFK85Db6cYz4g09ua16nfAyjt)** and place them inside the `_checkpoint/` directory.
 
 If you plan to **train the model**, you must also download the pretrained weights for the **RFR module**. These can be found in the [AnimeInterp repository](https://github.com/lisiyao21/AnimeInterp) and should be placed in the `_pretrain_models/` folder.
 
