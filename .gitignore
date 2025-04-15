@@ -5,6 +5,8 @@
 *.bmp
 *.tiff
 *.ico
+!_data/example_images/frame1.png
+!_data/example_images/frame3.png
 
 __pycache__
 
