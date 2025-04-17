@@ -115,8 +115,6 @@ class MultiInputResShift(nn.Module):
         tau: torch.Tensor | float | None, 
         t: torch.Tensor | int
     ) -> torch.Tensor:
-        assert tau.shape == (x.shape[0], len(Y)), "tau shape must be (batch, len(Y))"
-        
         if tau is None:
             tau: torch.Tensor = torch.full((x.shape[0], len(Y)), 0.5, device=x.device, dtype=x.dtype)
         elif isinstance(tau, float):
