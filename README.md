@@ -8,7 +8,10 @@ _(Waiting for acceptance)_
 
 **Víctor Manuel Fonte Chávez · Jean-Bernard Hayet · Claudia Esteves**
 
-[arXiv](https://arxiv.org/pdf/2504.05402) · [GitHub Repo](https://github.com/VicFonch/Multi-Input-Resshift-Diffusion-VFI)
+<a href='https://arxiv.org/pdf/2504.05402'><img src='https://img.shields.io/badge/arXiv-2405.17933-b31b1b.svg'></a> &nbsp;
+<a href=''><img src='https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face%20MultiIntputResDiff-Model-blue'></a>
+
+<!-- [arXiv](https://arxiv.org/pdf/2504.05402) · [GitHub Repo](https://github.com/VicFonch/Multi-Input-Resshift-Diffusion-VFI) -->
 
 **From CIMAT (Research Center in Mathematics)**  
 Accepted at the **24th ACM SIGGRAPH / Eurographics Symposium on Computer Animation**
@@ -47,7 +50,7 @@ pip install -r requirements.txt
 
 ## 🧩 Pretrained Models
 
-Download our pretrained weights from **[Our weights](https://drive.google.com/drive/u/2/folders/1RrrIPt8eFK85Db6cYz4g09ua16nfAyjt)** and place them inside the `_checkpoint/` directory.
+Download our pretrained weights from **[Our weights](https://drive.google.com/drive/u/2/folders/1LxEExFoTdRBRy86OO5no_E_AQ3sd3Hv9)** and place them inside the `_checkpoint/` directory.
 
 If you plan to **train the model**, you must also download the pretrained weights for the **RFR module**. These can be found in the [AnimeInterp repository](https://github.com/lisiyao21/AnimeInterp) and should be placed in the `_pretrain_models/` folder.
 
