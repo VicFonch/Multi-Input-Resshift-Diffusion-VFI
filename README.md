@@ -87,6 +87,20 @@ _data/ATD-12k/
 
 ## 🚀 Usage
 
+### 🏋️ Training
+
+To train the model from scratch or fine-tune on your own data:
+
+```bash
+python train.py --config config.yaml --data_path _data/ATD-12K
+```
+
+Make sure you have placed the required RFR weights in the `_pretrain_models/` folder as mentioned above and add the path in `config.yaml`
+
+You can edit `config.yaml` to change training parameters such as learning rate, batch size, loss weights, and dataset paths.
+
+---
+
 ### 🔍 Inference
 
 Once you have downloaded the pretrained weights, you can run inference on a sequence of frames using:
@@ -104,17 +118,25 @@ The output will be a predicted `frame2.png` saved in the specified output direct
 
 ---
 
-### 🏋️ Training
+## 🌐 Gradio Demo
 
-To train the model from scratch or fine-tune on your own data:
+if you have Nvidia GPU on your local computer you can interact with the model directly in your browser using the following command:
 
 ```bash
-python train.py --config config.yaml --data_path _data/ATD-12K
+python gradio_demo.py
 ```
 
-Make sure you have placed the required RFR weights in the `_pretrain_models/` folder as mentioned above and add the path in `config.yaml`
+You can upload an initial and a final image (e.g., `frame1` and `frame3`), and control the interpolation behavior with the following parameters:
 
-You can edit `config.yaml` to change training parameters such as learning rate, batch size, loss weights, and dataset paths.
+- **Tau**: A float between 0 and 1 indicating the position of the interpolated frame between the two inputs. This is only used if `Number of Samples = 1`.
+- **Number of Samples**: If greater than 1, the Tau value is ignored and a sequence of interpolated frames is generated and returned as an `.mp4` video.
+
+All images are automatically resized to **256 × 448**, and the output adapts depending on the number of samples:
+
+- If `num_samples = 1`, you will get a single interpolated image.
+- If `num_samples > 1`, you will get a video showing the temporal interpolation.
+
+This demo runs entirely in the browser and needs a Nvidia GPU to be executed.
 
 ---
 
