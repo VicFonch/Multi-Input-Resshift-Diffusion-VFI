@@ -1,8 +1,12 @@
 import os
 import torch
-import kornia
 import numpy as np
 import matplotlib.pyplot as plt
+
+try:
+    from kornia.morphology import opening
+except ImportError:
+    from kornia.morphology import open as opening
 
 from torchvision import transforms
 from torchvision.utils import make_grid, save_image
@@ -17,7 +21,7 @@ def morph_open(x: torch.Tensor, k: int) -> torch.Tensor:
         return x
     else:
         with torch.no_grad():
-            return kornia.morphology.opening(x, torch.ones(k,k,device=x.device))
+            return opening(x, torch.ones(k,k,device=x.device))
 
 def make_grid_images(images: list[torch.Tensor], **kwargs) -> torch.Tensor:
     concatenated_images = torch.cat(images, dim=3)
