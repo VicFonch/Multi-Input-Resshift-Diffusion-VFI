@@ -33,3 +33,8 @@ tensorboard>=2.8.0
 
 # FLOLPIPS (Quality Metrics)
 # Note: FLOLPIPS is included in the project code; no external installation is required.
+
+# Gradio
+gradio>=4.34.0
+imageio>=2.34.1
+imageio-ffmpeg>=0.6.0
