@@ -53,7 +53,7 @@ pip install -r requirements.txt
 
 ## 🧩 Pretrained Models
 
-Download our pretrained weights from **[Our weights](https://drive.google.com/drive/u/2/folders/1LxEExFoTdRBRy86OO5no_E_AQ3sd3Hv9)** and place them inside the `_checkpoint/` directory.
+Download our pretrained weights from **[Our weights](https://huggingface.co/vfontech/Multiple-Input-Resshift-VFI/tree/main)** and place them inside the `_checkpoint/` directory.
 
 If you plan to **train the model**, you must also download the pretrained weights for the **RFR module**. These can be found in the [AnimeInterp repository](https://github.com/lisiyao21/AnimeInterp) and should be placed in the `_pretrain_models/` folder.
 
