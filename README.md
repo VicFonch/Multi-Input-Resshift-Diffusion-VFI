@@ -10,7 +10,7 @@ _(Waiting for acceptance)_
 
 <div align="center">
   <a href='https://arxiv.org/pdf/2504.05402'><img src='https://img.shields.io/badge/arXiv-2405.17933-b31b1b.svg'></a> 
-  <a href='https://huggingface.co/vfontech/Multiple-Input-Resshift-VFI'><img src='https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face%20-Model-blue'></a>
+  <a href='https://huggingface.co/vfontech/Multiple-Input-Resshift-VFI'><img src='https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face%20-Model-yellow'></a>
   <a href='https://colab.research.google.com/drive/1MGYycbNMW6Mxu5MUqw_RW_xxiVeHK5Aa#scrollTo=EKaYCioiP3tQ'><img src='https://img.shields.io/badge/Colab-Demo-Green'></a>
 </div>
 
@@ -42,7 +42,7 @@ We perform extensive evaluations against state-of-the-art methods and show that 
 To install the required environment:
 
 ```bash
-conda create -n multi-input-resshift python=3.10
+conda create -n multi-input-resshift python=3.12
 conda activate multi-input-resshift
 pip install -r requirements.txt
 ```
