@@ -47,7 +47,7 @@ model_confg:
   min_noise_level: 0.04
   flow_model: raft
   flow_kwargs:
-    pretrained_path: _pretrain_models/anime_interp_full.ckpt
+    pretrained_path: null #_pretrain_models/anime_interp_full.ckpt
   warping_kwargs:
     in_channels: 3
     channels: [128, 256, 384, 512]
