@@ -57,6 +57,10 @@ demo = gr.Interface(
     ],
     title="Multi-Input ResShift Diffusion VFI",
     description=(
+        "📄 [arXiv Paper](https://arxiv.org/pdf/2504.05402) • "
+        "🤗 [Model](https://huggingface.co/vfontech/Multiple-Input-Resshift-VFI) • "
+        "🧪 [Colab](https://colab.research.google.com/drive/1MGYycbNMW6Mxu5MUqw_RW_xxiVeHK5Aa#scrollTo=EKaYCioiP3tQ) • "
+        "🌐 [GitHub](https://github.com/VicFonch/Multi-Input-Resshift-Diffusion-VFI)\n\n"
         "Video interpolation using Conditional Residual Diffusion.\n"
         "- All images are resized to 256x448.\n"
         "- If `Number of Samples` = 1, generates only one intermediate image with the given Tau value.\n"
