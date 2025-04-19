@@ -12,7 +12,7 @@ _(Waiting for acceptance)_
   <a href='https://arxiv.org/pdf/2504.05402'><img src='https://img.shields.io/badge/arXiv-2405.17933-b31b1b.svg'></a> 
   <a href='https://huggingface.co/vfontech/Multiple-Input-Resshift-VFI'><img src='https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face%20-Model-yellow'></a>
   <a href='https://colab.research.google.com/drive/1MGYycbNMW6Mxu5MUqw_RW_xxiVeHK5Aa#scrollTo=EKaYCioiP3tQ'><img src='https://img.shields.io/badge/Colab-Demo-Green'></a>
-  <a href='https://huggingface.co/spaces/vfontech/Multi-Input-Res-Diffusion-VFI'><img src='https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face%20-Demo-g'></a>
+  <a href='https://huggingface.co/spaces/vfontech/Multi-Input-Res-Diffusion-VFI'><img src='https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face%20Space-Demo-g'></a>
 </div>
 
 <!-- [arXiv](https://arxiv.org/pdf/2504.05402) · [GitHub Repo](https://github.com/VicFonch/Multi-Input-Resshift-Diffusion-VFI) -->
