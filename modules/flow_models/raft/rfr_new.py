@@ -14,6 +14,8 @@ from .extractor import BasicEncoder, SmallEncoder
 from .corr import CorrBlock
 from .utils import bilinear_sampler, coords_grid, upflow8
 
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
 try:
     autocast = torch.amp.autocast
 except:
@@ -34,8 +36,8 @@ def backwarp(img, flow):
 
     gridX, gridY = np.meshgrid(np.arange(W), np.arange(H))
 
-    gridX = torch.tensor(gridX, requires_grad=False,).cuda()
-    gridY = torch.tensor(gridY, requires_grad=False,).cuda()
+    gridX = torch.tensor(gridX, requires_grad=False,).to(device)
+    gridY = torch.tensor(gridY, requires_grad=False,).to(device)
     x = gridX.unsqueeze(0).expand_as(u).float() + u
     y = gridY.unsqueeze(0).expand_as(v).float() + v
     # range -1 to 1
@@ -129,8 +131,8 @@ class RFR(nn.Module):
                 f12init = torch.exp(- self.attention2(torch.cat([im18, error21, flow_init_resize], dim=1)) ** 2) * flow_init_resize
         else:
             flow_init_resize = None
-            flow_init = torch.zeros(image1.size()[0], 2, image1.size()[2]//8, image1.size()[3]//8).cuda()
-            error21 = torch.zeros(image1.size()[0], 1, image1.size()[2]//8, image1.size()[3]//8).cuda()
+            flow_init = torch.zeros(image1.size()[0], 2, image1.size()[2]//8, image1.size()[3]//8).to(device)
+            error21 = torch.zeros(image1.size()[0], 1, image1.size()[2]//8, image1.size()[3]//8).to(device)
 
             f12_init = flow_init
             # print('None inital flow!')
@@ -169,14 +171,14 @@ class RFR(nn.Module):
         cdim = self.context_dim
 
         # run the feature network
-        with autocast('cuda', enabled=self.args.mixed_precision):
+        with autocast(device, enabled=self.args.mixed_precision):
             fmap1, fmap2 = self.fnet([image1, image2])
         fmap1 = fmap1.float()
         fmap2 = fmap2.float()
         corr_fn = CorrBlock(fmap1, fmap2, radius=self.args.corr_radius)
 
         # run the context network
-        with autocast('cuda', enabled=self.args.mixed_precision):
+        with autocast(device, enabled=self.args.mixed_precision):
             cnet = self.fnet(image1)
             net, inp = torch.split(cnet, [hdim, cdim], dim=1)
             net = torch.tanh(net)
@@ -196,7 +198,7 @@ class RFR(nn.Module):
             corr = corr_fn(coords1) # index correlation volume
 
             flow = coords1 - coords0
-            with autocast('cuda', enabled=self.args.mixed_precision):
+            with autocast(device, enabled=self.args.mixed_precision):
                 net, up_mask, delta_flow = self.update_block(net, inp, corr, flow)
 
             # F(t+1) = F(t) + \Delta(t)
