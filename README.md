@@ -96,7 +96,9 @@ To train the model from scratch or fine-tune on your own data:
 python train.py --config config.yaml --data_path _data/ATD-12K
 ```
 
-Make sure you have placed the required RFR weights in the `_pretrain_models/` folder as mentioned above and add the path in `config.yaml`
+Make sure to place the required `RFR` pretrained weights inside the `_pretrain_models/` directory, as previously indicated. Then, specify the corresponding path in the `config.yaml` file.
+
+If you wish to perform fine-tuning, simply set the path to these weights in the `pretrained_model_path` parameter within the configuration file.
 
 You can edit `config.yaml` to change training parameters such as learning rate, batch size, loss weights, and dataset paths.
 
@@ -104,7 +106,7 @@ You can edit `config.yaml` to change training parameters such as learning rate, 
 
 ### 🔍 Inference
 
-Once you have downloaded the pretrained weights, you can run inference on a sequence of frames using:
+You can run inference on a sequence of frames using:
 
 ```bash
 python inference.py --img0_path path/to/img0 --img1_path path/to/img1 --output_path path/to/save --tau_val 0.5 --num_samples 1

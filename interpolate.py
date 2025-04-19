@@ -5,7 +5,7 @@ import yaml
 from PIL import Image
 import matplotlib.pyplot as plt
 
-from model.model import MultiInputResShift
+from model.hub import MultiInputResShiftHub
 
 from utils.utils import denorm
 
@@ -35,11 +35,14 @@ def save_image(tensor, path):
     tensor = tensor.squeeze().permute(1, 2, 0).cpu().numpy()
     plt.imsave(path, tensor)
 
-def load_model(confg_path, checkpoint_path):
-    with open(confg_path, "r") as f:
-        confg = yaml.safe_load(f)
-    model = MultiInputResShift(**confg["model_confg"])
-    model.load_state_dict(torch.load(checkpoint_path))
+def load_model(confg_path = None, checkpoint_path = None):
+    if confg_path is None or checkpoint_path is None:
+        model= MultiInputResShiftHub.from_pretrained("vfontech/Multiple-Input-Resshift-VFI")
+    else:
+        with open(confg_path, "r") as f:
+            confg = yaml.safe_load(f)
+        model = MultiInputResShiftHub(**confg["model_confg"])
+        model.load_state_dict(torch.load(checkpoint_path))
     model.eval().requires_grad_(False).cuda()
     return model
 

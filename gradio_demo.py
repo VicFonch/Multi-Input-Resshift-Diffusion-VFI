@@ -53,8 +53,6 @@ def interpolate(img0_pil: Image.Image,
         print(f"Error during interpolation: {e}")
         return None, None
     
-
-# Lo integras en Blocks y le agregas HTML arriba
 def build_demo() -> gr.Blocks:
     header = """
     <div style="text-align: center; padding: 1.5rem 0;">
