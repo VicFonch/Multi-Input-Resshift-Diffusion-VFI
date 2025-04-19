@@ -120,7 +120,7 @@ The output will be a predicted `frame2.png` saved in the specified output direct
 
 ## 🌐 Gradio Demo
 
-if you have Nvidia GPU on your local computer you can interact with the model directly in your browser using the following command:
+You can interact with the model directly in your browser using the [Gradio demo hosted on Hugging Face Spaces](https://huggingface.co/spaces/vfontech/Multi-Input-Res-Diffusion-VFI) or if you have a Nvidia GPU in your local computer, you can run it using the following command:
 
 ```bash
 python gradio_demo.py
@@ -136,7 +136,7 @@ All images are automatically resized to **256 × 448**, and the output adapts de
 - If `num_samples = 1`, you will get a single interpolated image.
 - If `num_samples > 1`, you will get a video showing the temporal interpolation.
 
-This demo runs entirely in the browser and needs a Nvidia GPU to be executed.
+This demo runs fully in the browser using GPU-backed inference on Hugging Face Spaces. Huge thanks to Hugging Face for the hardware support!
 
 ---
 
