@@ -169,7 +169,7 @@ Add `--by_category True` to evaluate separately for animation styles like _Disne
 If you find this work useful in your research, please consider citing:
 
 ```bibtex
-@misc{chavez2025timeadaptivevideoframeinterpolation,
+@article{chavez2025timeadaptivevideoframeinterpolation,
   title        = {Time-adaptive Video Frame Interpolation based on Residual Diffusion},
   author       = {Victor Fonte Chavez and Claudia Esteves and Jean-Bernard Hayet},
   year         = {2025},
