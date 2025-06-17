@@ -18,7 +18,6 @@ _(Waiting for acceptance)_
 <!-- [arXiv](https://arxiv.org/pdf/2504.05402) · [GitHub Repo](https://github.com/VicFonch/Multi-Input-Resshift-Diffusion-VFI) -->
 
 **From CIMAT (Research Center in Mathematics)**  
-Accepted at the **24th ACM SIGGRAPH / Eurographics Symposium on Computer Animation**
 
 </div>
 
